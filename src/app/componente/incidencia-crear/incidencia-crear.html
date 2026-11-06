@@ -1,0 +1,68 @@
+<div class="report-layout">
+  <!-- Columna 1: Mapa (Izquierda) -->
+  <mat-card class="map-card mat-elevation-z2">
+    <mat-card-title class="section-title">1. Ubicación de la Incidencia</mat-card-title>
+    <mat-card-content>
+      <!-- Placeholder interactivo del mapa -->
+      <div class="map-placeholder">
+        <img src="assets/map-placeholder.png" alt="Mapa de la ciudad" class="map-image">
+        <div class="map-pin">
+          <mat-icon color="warn">location_on</mat-icon>
+          <span class="pin-label">Arrastra para ajustar</span>
+        </div>
+      </div>
+
+      <div class="address-detected">
+        <mat-icon color="primary">location_on</mat-icon>
+        <span class="label">Dirección detectada:</span>
+      </div>
+      <div class="address-box">
+        Av. Javier Prado 2450, San Isidro (Coordenadas: -12.0914, -77.0182)
+      </div>
+      <button mat-flat-button class="btn-secondary-light full-width">Seleccionar Ubicación</button>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Columna 2: Formulario (Derecha) -->
+  <mat-card class="form-card mat-elevation-z2">
+    <mat-card-title class="section-title">2. Detalle del Reporte</mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="incidenciaForm" (ngSubmit)="onSubmit()" class="report-form">
+
+        <label class="custom-label">Categoría</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-select formControlName="idCategoria" placeholder="Seleccione una categoría">
+            <mat-option value="1">Bache en Pista</mat-option>
+            <mat-option value="2">Alumbrado Público</mat-option>
+            <mat-option value="3">Residuos</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <label class="custom-label">Descripción del problema</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <textarea matInput formControlName="descripcion" rows="4"
+                    placeholder="Describa el problema detalladamente..."></textarea>
+        </mat-form-field>
+
+        <label class="custom-label">Adjuntar Fotografías (Máximo 3)</label>
+        <div class="upload-box">
+          <mat-icon>camera_alt</mat-icon>
+          <p>Arrastra fotos aquí o haz clic para subir</p>
+          <span>Formatos JPG, PNG. Máximo 5MB por archivo.</span>
+        </div>
+
+        <div class="action-buttons">
+          <button mat-flat-button color="primary" type="submit" class="full-width btn-enviar">
+            Enviar Reporte
+          </button>
+
+          <!-- Botón de IA del mockup -->
+          <button mat-stroked-button type="button" class="full-width btn-ia" (click)="mejorarConIA()">
+            <mat-icon>auto_awesome</mat-icon> Mejorar con IA
+          </button>
+        </div>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

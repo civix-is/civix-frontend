@@ -1,0 +1,37 @@
+<!-- La barra superior solo se renderiza si el usuario tiene un token activo -->
+<mat-toolbar class="main-navbar" *ngIf="authService.estaLogueado()">
+
+  <!-- Logo Izquierda -->
+  <div class="navbar-brand">
+    <div class="shield-icon-nav">
+      <mat-icon>security</mat-icon>
+    </div>
+    <div class="brand-text">
+      <span class="title">Portal Ciudadano</span>
+      <span class="subtitle">MUNICIPALIDAD</span>
+    </div>
+  </div>
+
+  <!-- Enlaces Centro -->
+  <div class="navbar-links">
+    <a mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
+    <a mat-button routerLink="/incidencia-crear" routerLinkActive="active-link">Reportar</a>
+    <a mat-button routerLink="/mis-incidencias" routerLinkActive="active-link">Seguimiento</a>
+    <a mat-button routerLink="/mapa" routerLinkActive="active-link">Mapa</a>
+  </div>
+
+  <span class="spacer"></span>
+
+  <!-- Perfil Derecha -->
+  <div class="user-profile">
+    <span class="user-name">Usuario Conectado</span>
+    <div class="avatar-circle">US</div>
+    <button mat-icon-button (click)="cerrarSesion()" title="Cerrar sesión" color="warn">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </div>
+
+</mat-toolbar>
+
+<!-- Aquí se cargan dinámicamente las pantallas (Login, Formularios, etc.) -->
+<router-outlet></router-outlet>
