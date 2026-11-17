@@ -65,10 +65,21 @@ export class AuthService {
   getRol(): string | null {
     const token = this.getToken();
     if (!token) return null;
+
     try {
-      const payloadJson = JSON.parse(atob(token.split('.')[1]));
-      return payloadJson.rol || payloadJson.authorities?.[0]?.authority || 'CIUDADANO';
-    } catch (e) {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+
+      const payload = JSON.parse(atob(base64));
+      const roles: string[] = payload.roles || [];
+
+      const rol =
+        roles.find((r) => r.replace(/^ROLE_/, '') === 'ADMINISTRADOR') ||
+        roles[0] ||
+        payload.rol ||
+        payload.authorities?.[0]?.authority;
+
+      return typeof rol === 'string' ? rol.replace(/^ROLE_/, '') : null;
+    } catch {
       return null;
     }
   }

@@ -9,6 +9,7 @@ import { IncidenciaLista } from './componente/incidencia-lista/incidencia-lista'
 // Importar los Guards
 import { authGuard } from './guards/auth.guard';
 import { publicGuard } from './guards/public.guard';
+import { IncidenciasTodas } from './componente/incidencias-todas/incidencias-todas';
 
 export const routes: Routes = [
   // Redirección base
@@ -23,4 +24,5 @@ export const routes: Routes = [
   { path: 'incidencia-crear', component: IncidenciaCrear, canActivate: [authGuard] },
   { path: 'mis-incidencias', component: IncidenciaLista, canActivate: [authGuard] },
   { path: 'usuarios-lista', component: UsuarioLista, canActivate: [authGuard] },
+  { path: 'incidencia-todas', component: IncidenciasTodas, canActivate: [authGuard] },
 ];

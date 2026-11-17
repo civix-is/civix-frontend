@@ -18,18 +18,18 @@ export class IncidenciaService {
     return this.httpClient.get<Incidencia[]>(environment.apiUrl + '/incidencia/mis-reportes');
   }
   listar(): Observable<Incidencia[]>{
-   return this.httpClient.get<Incidencia[]>(environment.apiUrl + '/incidencias/listar');
+   return this.httpClient.get<Incidencia[]>(environment.apiUrl + '/incidencia/listar');
   }
   buscarporId(id: number) {
-    return this.httpClient.get<Incidencia>(environment.apiUrl + '/incidencias/buscar-por-id/{id}');
+    return this.httpClient.get<Incidencia>(environment.apiUrl + '/incidencia/buscar-por-id/{id}');
   }
   buscarPorEstadoAtencion(estadoAtencion: string): Observable<Incidencia[]>{
     return this.httpClient.get<Incidencia[]>(environment.apiUrl+'/incidencia/estado/{estadoAtencion}');
   }
   actualizar(incidencia:IncidenciaActualizar){
-    return this.httpClient.put<Incidencia>(environment.apiUrl + '/incidencias/actualizar', incidencia);
+    return this.httpClient.put<Incidencia>(environment.apiUrl + '/incidencia/actualizar', incidencia);
   }
   eliminar(id:number){
-    return this.httpClient.request('delete',environment.apiUrl + '/incidencias/eliminar',{body: id});
+    return this.httpClient.request('delete',environment.apiUrl + '/incidencia/eliminar',{body: id});
   }
 }

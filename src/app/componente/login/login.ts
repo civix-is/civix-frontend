@@ -61,7 +61,7 @@ export class Login implements OnInit {
 
           // Verificamos el rol para redirigir a la pantalla correcta
           const rol = this.authService.getRol();
-          if (rol === 'ROLE_ADMIN' || rol === 'ADMIN') {
+          if (rol === 'ROLE_ADMIN' || rol === 'ADMINISTRADOR') {
             this.router.navigate(['/incidencia-lista']);
           } else {
             this.router.navigate(['/mis-incidencias']);

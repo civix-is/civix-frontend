@@ -1,25 +1,37 @@
 <div class="report-layout">
   <!-- Columna 1: Mapa (Izquierda) -->
   <mat-card class="map-card mat-elevation-z2">
-    <mat-card-title class="section-title">1. Ubicación de la Incidencia</mat-card-title>
-    <mat-card-content>
-      <!-- Placeholder interactivo del mapa -->
-      <div class="map-placeholder">
-        <img src="assets/map-placeholder.png" alt="Mapa de la ciudad" class="map-image">
-        <div class="map-pin">
-          <mat-icon color="warn">location_on</mat-icon>
-          <span class="pin-label">Arrastra para ajustar</span>
-        </div>
-      </div>
+    <mat-card-title class="section-title">
+      1. Ubicación de la Incidencia
+    </mat-card-title>
 
-      <div class="address-detected">
-        <mat-icon color="primary">location_on</mat-icon>
-        <span class="label">Dirección detectada:</span>
-      </div>
-      <div class="address-box">
-        Av. Javier Prado 2450, San Isidro (Coordenadas: -12.0914, -77.0182)
-      </div>
-      <button mat-flat-button class="btn-secondary-light full-width">Seleccionar Ubicación</button>
+    <mat-card-content>
+      <div #mapa class="mapa-interactivo"></div>
+
+      <p>Haz clic en el mapa para indicar dónde ocurrió el problema.</p>
+
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="usarMiUbicacion()">
+        <mat-icon>my_location</mat-icon>
+        Usar mi ubicación
+      </button>
+
+      @if (buscandoDireccion) {
+        <p>Buscando dirección…</p>
+      }
+
+      @if (incidenciaForm.get('direccionReferencia')?.value) {
+        <p>
+          <strong>Dirección detectada:</strong>
+          {{ incidenciaForm.get('direccionReferencia')?.value }}
+        </p>
+      }
+
+      @if (mensajeMapa) {
+        <p>{{ mensajeMapa }}</p>
+      }
     </mat-card-content>
   </mat-card>
 
