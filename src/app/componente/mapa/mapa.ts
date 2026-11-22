@@ -40,6 +40,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   private mapa?: L.Map;
   private capaMarcadores = L.layerGroup();
 
+  private readonly STORAGE_APOYOS = 'civix_apoyos_vecinales';
+  private readonly STORAGE_CALIFICACIONES = 'civix_calificaciones_mapa';
+
   categorias = signal<Categoria[]>([]);
   categoriasSeleccionadas = signal<Set<number>>(new Set());
   estadoFiltro = signal<string>('TODOS');
@@ -51,11 +54,15 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   fotoSeleccionada = signal<string | null>(null);
 
   apoyosVecinales = signal<Record<number, { count: number; apoyado: boolean }>>({});
+  calificacionesGuardadas = signal<Record<number, number>>({});
+
   mostrarCalificacion = signal<boolean>(false);
   estrellasSeleccionadas = signal<number>(5);
   calificacionGuardada = signal<boolean>(false);
 
   ngOnInit(): void {
+    this.cargarPersistenciaLocal();
+
     this.categoriaService.listar().subscribe({
       next: (cats) => {
         this.categorias.set(cats);
@@ -65,6 +72,18 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: () => this.cargarIncidencias(),
     });
+  }
+
+  private cargarPersistenciaLocal(): void {
+    const apoyosRaw = localStorage.getItem(this.STORAGE_APOYOS);
+    if (apoyosRaw) {
+      this.apoyosVecinales.set(JSON.parse(apoyosRaw));
+    }
+
+    const califRaw = localStorage.getItem(this.STORAGE_CALIFICACIONES);
+    if (califRaw) {
+      this.calificacionesGuardadas.set(JSON.parse(califRaw));
+    }
   }
 
   ngAfterViewInit(): void {
@@ -89,14 +108,19 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.incidenciaService.listar().subscribe({
       next: (data) => {
         this.todasIncidencias.set(data);
-        const apoyosIniciales: Record<number, { count: number; apoyado: boolean }> = {};
+        const apoyosActuales = { ...this.apoyosVecinales() };
+
         data.forEach((inc) => {
-          apoyosIniciales[inc.idIncidencia] = {
-            count: (inc.idIncidencia % 19) + 6,
-            apoyado: false,
-          };
+          if (!apoyosActuales[inc.idIncidencia]) {
+            apoyosActuales[inc.idIncidencia] = {
+              count: (inc.idIncidencia % 19) + 6,
+              apoyado: false,
+            };
+          }
         });
-        this.apoyosVecinales.set(apoyosIniciales);
+
+        this.apoyosVecinales.set(apoyosActuales);
+        localStorage.setItem(this.STORAGE_APOYOS, JSON.stringify(apoyosActuales));
         this.aplicarFiltros();
       },
     });
@@ -149,6 +173,10 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mostrarCalificacion.set(false);
     this.calificacionGuardada.set(false);
     this.fotoSeleccionada.set(null);
+
+    // Recupera la calificación guardada de esta incidencia si existe
+    const previa = this.calificacionesGuardadas()[inc.idIncidencia];
+    this.estrellasSeleccionadas.set(previa ?? 5);
 
     this.evidenciaService.buscarPorIncidencia(inc.idIncidencia).subscribe({
       next: (evidencias) => {
@@ -228,9 +256,21 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       apoyado: !actual.apoyado,
     };
     this.apoyosVecinales.set(mapaApoyos);
+    localStorage.setItem(this.STORAGE_APOYOS, JSON.stringify(mapaApoyos));
   }
 
   guardarCalificacion(): void {
+    const inc = this.incidenciaSeleccionada();
+    if (!inc) return;
+
+    const actualizadas = {
+      ...this.calificacionesGuardadas(),
+      [inc.idIncidencia]: this.estrellasSeleccionadas(),
+    };
+
+    this.calificacionesGuardadas.set(actualizadas);
+    localStorage.setItem(this.STORAGE_CALIFICACIONES, JSON.stringify(actualizadas));
+
     this.calificacionGuardada.set(true);
     setTimeout(() => {
       this.mostrarCalificacion.set(false);
