@@ -44,9 +44,9 @@
         <label class="custom-label">Categoría</label>
         <mat-form-field appearance="outline" class="full-width">
           <mat-select formControlName="idCategoria" placeholder="Seleccione una categoría">
-            <mat-option value="1">Bache en Pista</mat-option>
-            <mat-option value="2">Alumbrado Público</mat-option>
-            <mat-option value="3">Residuos</mat-option>
+            @for (c of categorias(); track c.idCategoria) {
+              <mat-option [value]="c.idCategoria">{{ c.nombre }}</mat-option>
+            }
           </mat-select>
         </mat-form-field>
 
@@ -68,10 +68,24 @@
             Enviar Reporte
           </button>
 
-          <!-- Botón de IA del mockup -->
-          <button mat-stroked-button type="button" class="full-width btn-ia" (click)="mejorarConIA()">
-            <mat-icon>auto_awesome</mat-icon> Mejorar con IA
+          <button mat-stroked-button type="button" class="full-width btn-ia"
+                  [disabled]="mejorandoIA()" (click)="mejorarConIA()">
+            <mat-icon>auto_awesome</mat-icon>
+            {{ mejorandoIA() ? 'Mejorando...' : 'Mejorar con IA' }}
           </button>
+
+          @if (errorIA()) {
+            <p class="error-ia">{{ errorIA() }}</p>
+          }
+
+          @if (sugerenciaIA()) {
+            <div class="sugerencia-ia">
+              <strong>Sugerencia de la IA:</strong>
+              <p>{{ sugerenciaIA() }}</p>
+              <button mat-flat-button type="button" (click)="aceptarSugerencia()">Usar este texto</button>
+              <button mat-button type="button" (click)="descartarSugerencia()">Descartar</button>
+            </div>
+          }
         </div>
 
       </form>

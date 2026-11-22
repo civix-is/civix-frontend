@@ -2,6 +2,7 @@ import { inject, Service } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Categoria } from '../model/categoria';
 
 @Service()
 export class CategoriaService {
@@ -11,8 +12,8 @@ export class CategoriaService {
   registrar(categoria:CategoriaService){
     return this.httpClient.post<CategoriaService>(environment.apiUrl+"/categoria/registrar",categoria);
   }
-  listar():Observable<CategoriaService[]>{
-    return this.httpClient.get<CategoriaService[]>(environment.apiUrl+"/categoria/listar");
+  listar(): Observable<Categoria[]> {
+    return this.httpClient.get<Categoria[]>(environment.apiUrl + "/categoria/listar");
   }
   buscarPorId(id:number):Observable<CategoriaService[]>{
     const params = new HttpParams().set('id', id);

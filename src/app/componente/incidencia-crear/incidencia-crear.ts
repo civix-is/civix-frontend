@@ -5,12 +5,14 @@ import {
   inject,
   OnDestroy,
   OnInit,
+  signal,
   ViewChild,
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IncidenciaService } from '../../services/incidencia-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IncidenciaRegistro } from '../../model/incidencia-registro';
+import { IaService } from '../../services/ia-service';
 
 // Importaciones de Angular Material necesarias
 import { MatCardModule } from '@angular/material/card';
@@ -21,6 +23,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { HttpClient } from '@angular/common/http';
 import * as L from 'leaflet';
+import { CategoriaService } from '../../services/categoria-service';
+import { Categoria } from '../../model/categoria';
 
 @Component({
   selector: 'app-incidencia-crear',
@@ -51,6 +55,14 @@ export class IncidenciaCrear implements OnInit, AfterViewInit, OnDestroy {
   private mapa?: L.Map;
   private marcador?: L.CircleMarker;
   private seleccionActual = 0;
+
+  iaService = inject(IaService);
+  mejorandoIA = signal(false);
+  sugerenciaIA = signal('');
+  errorIA = signal('');
+
+  categoriaService = inject(CategoriaService);
+  categorias = signal<Categoria[]>([]);
 
   buscandoDireccion = false;
   mensajeMapa = '';
@@ -93,78 +105,77 @@ export class IncidenciaCrear implements OnInit, AfterViewInit, OnDestroy {
       }).addTo(this.mapa);
     }
 
-  this.incidenciaForm.patchValue({
-                                   latitud,
-                                   longitud,
-                                   direccionReferencia: '',
-                                 });
+    this.incidenciaForm.patchValue({
+      latitud,
+      longitud,
+      direccionReferencia: '',
+    });
 
-  this.buscandoDireccion = true;
-  this.mensajeMapa = '';
+    this.buscandoDireccion = true;
+    this.mensajeMapa = '';
 
-  this.http.get<{ display_name?: string }>(
-  'https://nominatim.openstreetmap.org/reverse',
-    {
-      params: {
-        lat: latitud.toString(),
-        lon: longitud.toString(),
-        format: 'jsonv2',
-        'accept-language': 'es',
-      },
-    }
-).subscribe({
-  next: (resultado) => {
-    // Evita que una respuesta anterior sobrescriba la última selección.
-    if (seleccion !== this.seleccionActual) return;
+    this.http
+      .get<{ display_name?: string }>('https://nominatim.openstreetmap.org/reverse', {
+        params: {
+          lat: latitud.toString(),
+          lon: longitud.toString(),
+          format: 'jsonv2',
+          'accept-language': 'es',
+        },
+      })
+      .subscribe({
+        next: (resultado) => {
+          // Evita que una respuesta anterior sobrescriba la última selección.
+          if (seleccion !== this.seleccionActual) return;
 
-    this.buscandoDireccion = false;
+          this.buscandoDireccion = false;
 
-    if (resultado.display_name) {
-      this.incidenciaForm.patchValue({
-        direccionReferencia: resultado.display_name,
+          if (resultado.display_name) {
+            this.incidenciaForm.patchValue({
+              direccionReferencia: resultado.display_name,
+            });
+          } else {
+            this.mensajeMapa = 'No se encontró una dirección. Puedes escribir una referencia.';
+          }
+        },
+        error: () => {
+          if (seleccion !== this.seleccionActual) return;
+
+          this.buscandoDireccion = false;
+          this.mensajeMapa = 'No se pudo consultar la dirección. Puedes escribir una referencia.';
+        },
       });
-    } else {
-      this.mensajeMapa =
-        'No se encontró una dirección. Puedes escribir una referencia.';
-    }
-  },
-  error: () => {
-    if (seleccion !== this.seleccionActual) return;
-
-    this.buscandoDireccion = false;
-    this.mensajeMapa =
-      'No se pudo consultar la dirección. Puedes escribir una referencia.';
-  },
-});
-}
-
-usarMiUbicacion(): void {
-  if (!navigator.geolocation) {
-  this.mensajeMapa = 'Tu navegador no admite geolocalización.';
-  return;
-}
-
-navigator.geolocation.getCurrentPosition(
-  ({ coords }) => {
-    this.mapa?.setView([coords.latitude, coords.longitude], 17);
-    this.seleccionarUbicacion(coords.latitude, coords.longitude);
-  },
-  () => {
-    this.mensajeMapa =
-      'No se pudo obtener tu ubicación. Selecciónala en el mapa.';
-  },
-  {
-    enableHighAccuracy: true,
-    timeout: 10000,
   }
-);
-}
 
-ngOnDestroy(): void {
-  this.seleccionActual++;
-  this.mapa?.remove();
-}
+  usarMiUbicacion(): void {
+    if (!navigator.geolocation) {
+      this.mensajeMapa = 'Tu navegador no admite geolocalización.';
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        this.mapa?.setView([coords.latitude, coords.longitude], 17);
+        this.seleccionarUbicacion(coords.latitude, coords.longitude);
+      },
+      () => {
+        this.mensajeMapa = 'No se pudo obtener tu ubicación. Selecciónala en el mapa.';
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      },
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.seleccionActual++;
+    this.mapa?.remove();
+  }
   ngOnInit() {
+    this.categoriaService.listar().subscribe({
+      next: (data) => this.categorias.set(data.filter((c) => c.estado)),
+    });
     this.route.params.subscribe((params) => {
       this.id = params['id'];
       this.edicion = params['id'] != null;
@@ -183,11 +194,43 @@ ngOnDestroy(): void {
   }
 
   mejorarConIA() {
-    console.log('Simulando mejora con IA...');
-    this.incidenciaForm.patchValue({
-      descripcion:
-        'Se reporta un bache de gran magnitud en el carril central de la Av. Javier Prado, el cual representa un riesgo potencial de colisión vehicular.',
-    });
+    const descripcion = (this.incidenciaForm.value.descripcion ?? '').trim();
+    const cat = this.categorias().find(
+      (c) => c.idCategoria === Number(this.incidenciaForm.value.idCategoria),
+    );
+
+    if (descripcion.length < 10) {
+      this.errorIA.set('Escribe al menos una breve descripción para poder mejorarla.');
+      return;
+    }
+    this.errorIA.set('');
+    this.sugerenciaIA.set('');
+    this.mejorandoIA.set(true);
+
+    this.iaService
+      .mejorarDescripcion({
+        descripcion,
+        categoria: cat?.nombre,
+      })
+      .subscribe({
+        next: (r) => {
+          this.sugerenciaIA.set(r.descripcionMejorada);
+          this.mejorandoIA.set(false);
+        },
+        error: () => {
+          this.errorIA.set('No se pudo mejorar el texto. Intenta nuevamente.');
+          this.mejorandoIA.set(false);
+        },
+      });
+  }
+
+  aceptarSugerencia() {
+    this.incidenciaForm.patchValue({ descripcion: this.sugerenciaIA() });
+    this.sugerenciaIA.set('');
+  }
+
+  descartarSugerencia() {
+    this.sugerenciaIA.set('');
   }
 
   onSubmit() {
