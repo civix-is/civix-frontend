@@ -1,48 +1,95 @@
-<div class="report-layout">
-  <!-- Columna 1: Mapa (Izquierda) -->
-  <mat-card class="map-card mat-elevation-z2">
-    <mat-card-title class="section-title">
-      1. Ubicación de la Incidencia
-    </mat-card-title>
+@if (reporteEnviado(); as reporte) {
+  <!-- PANTALLA 2: REPORTE ENVIADO CON ÉXITO -->
+  <div class="success-wrapper">
+    <mat-card class="success-card mat-elevation-z2">
+      <div class="success-icon-circle">
+        <mat-icon>done_all</mat-icon>
+      </div>
 
-    <mat-card-content>
-      <div #mapa class="mapa-interactivo"></div>
+      <h1 class="success-title">Reporte Enviado con Éxito</h1>
+      <p class="success-subtitle">
+        Su incidencia ha sido registrada correctamente en el sistema de gestión municipal.
+      </p>
 
-      <p>Haz clic en el mapa para indicar dónde ocurrió el problema.</p>
+      <div class="ticket-badge">
+        TICKET ID: {{ reporte.codigoIncidencia || ('INC-2026-' + reporte.idIncidencia) }}
+      </div>
 
-      <button
-        mat-stroked-button
-        type="button"
-        (click)="usarMiUbicacion()">
-        <mat-icon>my_location</mat-icon>
-        Usar mi ubicación
-      </button>
+      <div class="summary-box">
+        <div class="summary-row">
+          <span class="summary-label">Categoría</span>
+          <span class="summary-value">{{ reporte.categoria?.nombre || 'Categoría asignada' }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Ubicación</span>
+          <span class="summary-value">{{ reporte.direccionReferencia }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Fecha de Registro</span>
+          <span class="summary-value">{{ reporte.fechaRegistro | date: 'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Estado Inicial</span>
+          <span class="status-pill">{{ reporte.estadoAtencion || 'Recibido' }}</span>
+        </div>
+      </div>
 
-      @if (buscandoDireccion) {
-        <p>Buscando dirección…</p>
-      }
+      <div class="success-actions">
+        <button mat-flat-button class="btn-primary-solid" type="button" (click)="irASeguimiento()">
+          Ver Seguimiento
+        </button>
+        <button mat-stroked-button class="btn-outline-blue" type="button" (click)="crearOtroReporte()">
+          Crear Otro Reporte
+        </button>
+      </div>
+    </mat-card>
+  </div>
+} @else {
+  <!-- PANTALLA 1: FORMULARIO DE REPORTE DE INCIDENCIA -->
+  <div class="report-layout">
+    <!-- Columna 1: Mapa (Izquierda) -->
+    <mat-card class="map-card mat-elevation-z1">
+      <h2 class="section-title">1. Ubicación de la Incidencia</h2>
 
-      @if (incidenciaForm.get('direccionReferencia')?.value) {
-        <p>
-          <strong>Dirección detectada:</strong>
-          {{ incidenciaForm.get('direccionReferencia')?.value }}
-        </p>
-      }
+      <div class="map-frame">
+        <div #mapa class="mapa-interactivo"></div>
+      </div>
 
-      @if (mensajeMapa) {
-        <p>{{ mensajeMapa }}</p>
-      }
-    </mat-card-content>
-  </mat-card>
+      <div class="location-info">
+        <div class="location-label">
+          <mat-icon>location_on</mat-icon>
+          <span>Dirección detectada:</span>
+        </div>
 
-  <!-- Columna 2: Formulario (Derecha) -->
-  <mat-card class="form-card mat-elevation-z2">
-    <mat-card-title class="section-title">2. Detalle del Reporte</mat-card-title>
-    <mat-card-content>
+        <div class="address-box">
+          @if (buscandoDireccion) {
+            <span>Detectando dirección...</span>
+          } @else {
+            <span>
+              {{ incidenciaForm.get('direccionReferencia')?.value || 'Haz clic en el mapa para ubicar' }}
+              (Coordenadas: {{ incidenciaForm.get('latitud')?.value }}, {{ incidenciaForm.get('longitud')?.value }})
+            </span>
+          }
+        </div>
+
+        <button mat-flat-button type="button" class="btn-location" (click)="usarMiUbicacion()">
+          <mat-icon>my_location</mat-icon>
+          Seleccionar Ubicación Actual
+        </button>
+
+        @if (mensajeMapa) {
+          <p class="helper-warning">{{ mensajeMapa }}</p>
+        }
+      </div>
+    </mat-card>
+
+    <!-- Columna 2: Formulario (Derecha) -->
+    <mat-card class="form-card mat-elevation-z1">
+      <h2 class="section-title">2. Detalle del Reporte</h2>
+
       <form [formGroup]="incidenciaForm" (ngSubmit)="onSubmit()" class="report-form">
-
         <label class="custom-label">Categoría</label>
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field appearance="outline" class="full-width compact-field">
           <mat-select formControlName="idCategoria" placeholder="Seleccione una categoría">
             @for (c of categorias(); track c.idCategoria) {
               <mat-option [value]="c.idCategoria">{{ c.nombre }}</mat-option>
@@ -51,44 +98,98 @@
         </mat-form-field>
 
         <label class="custom-label">Descripción del problema</label>
-        <mat-form-field appearance="outline" class="full-width">
-          <textarea matInput formControlName="descripcion" rows="4"
-                    placeholder="Describa el problema detalladamente..."></textarea>
+        <mat-form-field appearance="outline" class="full-width compact-field">
+          <textarea
+            matInput
+            formControlName="descripcion"
+            rows="4"
+            placeholder="Describa el problema detalladamente..."
+          ></textarea>
         </mat-form-field>
 
         <label class="custom-label">Adjuntar Fotografías (Máximo 3)</label>
-        <div class="upload-box">
-          <mat-icon>camera_alt</mat-icon>
-          <p>Arrastra fotos aquí o haz clic para subir</p>
-          <span>Formatos JPG, PNG. Máximo 5MB por archivo.</span>
+        <div
+          class="upload-box"
+          (click)="abrirSelectorFotos()"
+          (drop)="onDropFotos($event)"
+          (dragover)="onDragOver($event)"
+        >
+          <input
+            #fileInput
+            type="file"
+            accept="image/png, image/jpeg, image/jpg"
+            multiple
+            hidden
+            (change)="onArchivosSeleccionados($event)"
+          />
+          <mat-icon class="camera-icon">photo_camera</mat-icon>
+          <p class="upload-title">Arrastra fotos aquí o haz clic para subir</p>
+          <span class="upload-hint">Formatos JPG, PNG. Máximo 5MB por archivo.</span>
         </div>
+
+        @if (errorFotos()) {
+          <p class="error-text">{{ errorFotos() }}</p>
+        }
+
+        @if (fotos().length > 0) {
+          <div class="thumbnails-row">
+            @for (foto of fotos(); track foto.url; let i = $index) {
+              <div class="thumb-item">
+                <img [src]="foto.url" alt="Vista previa" />
+                <button type="button" class="remove-thumb-btn" (click)="eliminarFoto(i)" title="Quitar foto">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        @if (errorEnvio()) {
+          <div class="error-banner">{{ errorEnvio() }}</div>
+        }
 
         <div class="action-buttons">
-          <button mat-flat-button color="primary" type="submit" class="full-width btn-enviar">
-            Enviar Reporte
+          <button
+            mat-flat-button
+            type="submit"
+            class="full-width btn-primary-solid"
+            [disabled]="enviando()"
+          >
+            {{ enviando() ? 'Enviando Reporte...' : 'Enviar Reporte' }}
           </button>
 
-          <button mat-stroked-button type="button" class="full-width btn-ia"
-                  [disabled]="mejorandoIA()" (click)="mejorarConIA()">
-            <mat-icon>auto_awesome</mat-icon>
-            {{ mejorandoIA() ? 'Mejorando...' : 'Mejorar con IA' }}
+          <button
+            mat-stroked-button
+            type="button"
+            class="full-width btn-ia"
+            [disabled]="mejorandoIA()"
+            (click)="mejorarConIA()"
+          >
+            <mat-icon class="sparkle-icon">auto_awesome</mat-icon>
+            {{ mejorandoIA() ? 'Mejorando con IA...' : 'Mejorar con IA' }}
           </button>
-
-          @if (errorIA()) {
-            <p class="error-ia">{{ errorIA() }}</p>
-          }
-
-          @if (sugerenciaIA()) {
-            <div class="sugerencia-ia">
-              <strong>Sugerencia de la IA:</strong>
-              <p>{{ sugerenciaIA() }}</p>
-              <button mat-flat-button type="button" (click)="aceptarSugerencia()">Usar este texto</button>
-              <button mat-button type="button" (click)="descartarSugerencia()">Descartar</button>
-            </div>
-          }
         </div>
 
+        @if (errorIA()) {
+          <p class="error-text">{{ errorIA() }}</p>
+        }
+
+        @if (sugerenciaIA()) {
+          <div class="sugerencia-ia">
+            <div class="sugerencia-header">
+              <mat-icon>auto_awesome</mat-icon>
+              <strong>Sugerencia de la IA</strong>
+            </div>
+            <p>{{ sugerenciaIA() }}</p>
+            <div class="sugerencia-actions">
+              <button mat-flat-button type="button" class="btn-use-ia" (click)="aceptarSugerencia()">
+                Usar este texto
+              </button>
+              <button mat-button type="button" (click)="descartarSugerencia()">Descartar</button>
+            </div>
+          </div>
+        }
       </form>
-    </mat-card-content>
-  </mat-card>
-</div>
+    </mat-card>
+  </div>
+}

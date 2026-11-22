@@ -2,7 +2,7 @@ import { Categoria } from './categoria';
 
 export class Incidencia {
   idIncidencia: number;
-  codigoIncidencia: number;
+  codigoIncidencia: string;
   titulo: string;
   descripcion: string;
   direccionReferencia: string;
@@ -13,5 +13,6 @@ export class Incidencia {
   latitud: number;
   longitud: number;
   prioridad: string;
-  idCategoria: Categoria;
+  categoria?: Categoria;
+  idCategoria?: Categoria;
 }

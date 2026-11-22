@@ -1,28 +1,31 @@
 import { Routes } from '@angular/router';
+import { HomeComponent } from './componente/home-component/home-component';
 import { AcercaComponent } from './componente/acerca-component/acerca-component';
 import { Registro } from './componente/registro/registro';
 import { UsuarioLista } from './componente/usuario-lista/usuario-lista';
 import { Login } from './componente/login/login';
 import { IncidenciaCrear } from './componente/incidencia-crear/incidencia-crear';
 import { IncidenciaLista } from './componente/incidencia-lista/incidencia-lista';
-
-// Importar los Guards
+import { IncidenciaDetalle } from './componente/incidencia-detalle/incidencia-detalle';
+import { IncidenciasTodas } from './componente/incidencias-todas/incidencias-todas';
+import { MapaComponent } from './componente/mapa/mapa';
 import { authGuard } from './guards/auth.guard';
 import { publicGuard } from './guards/public.guard';
-import { IncidenciasTodas } from './componente/incidencias-todas/incidencias-todas';
 
 export const routes: Routes = [
-  // Redirección base
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '', redirectTo: '/home', pathMatch: 'full' },
 
-  // Rutas Públicas (Protegidas por publicGuard)
+  { path: 'home', component: HomeComponent, canActivate: [publicGuard] },
   { path: 'login', component: Login, canActivate: [publicGuard] },
   { path: 'usuarios-registro', component: Registro, canActivate: [publicGuard] },
   { path: 'acerca', component: AcercaComponent, canActivate: [publicGuard] },
 
-  // Rutas Privadas (Protegidas por authGuard)
   { path: 'incidencia-crear', component: IncidenciaCrear, canActivate: [authGuard] },
   { path: 'mis-incidencias', component: IncidenciaLista, canActivate: [authGuard] },
+  { path: 'mapa', component: MapaComponent, canActivate: [authGuard] },
+  { path: 'incidencia-detalle/:id', component: IncidenciaDetalle, canActivate: [authGuard] },
   { path: 'usuarios-lista', component: UsuarioLista, canActivate: [authGuard] },
   { path: 'incidencia-todas', component: IncidenciasTodas, canActivate: [authGuard] },
+
+  { path: '**', redirectTo: '/home' },
 ];

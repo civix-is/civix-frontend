@@ -1,35 +1,45 @@
-import { inject, Service } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { IncidenciaRegistro } from '../model/incidencia-registro';
 import { Incidencia } from '../model/incidencia';
 import { Observable } from 'rxjs';
-import { IncidenciaActualizar } from '../model/incidencia-actualizar';
 
-@Service()
+@Injectable({ providedIn: 'root' })
 export class IncidenciaService {
   private url = environment.apiUrl;
-  private httpClient: HttpClient = inject(HttpClient);
-  constructor() {}
-  registrar(incidencia: IncidenciaRegistro) {
-    return this.httpClient.post<Incidencia>(environment.apiUrl + '/incidencia/registrar', incidencia);
+  private httpClient = inject(HttpClient);
+
+  registrar(incidencia: IncidenciaRegistro): Observable<Incidencia> {
+    return this.httpClient.post<Incidencia>(`${this.url}/incidencia/registrar`, incidencia);
   }
+
   listarMisIncidencias(): Observable<Incidencia[]> {
-    return this.httpClient.get<Incidencia[]>(environment.apiUrl + '/incidencia/mis-reportes');
+    return this.httpClient.get<Incidencia[]>(`${this.url}/incidencia/mis-reportes`);
   }
-  listar(): Observable<Incidencia[]>{
-   return this.httpClient.get<Incidencia[]>(environment.apiUrl + '/incidencia/listar');
+
+  listar(): Observable<Incidencia[]> {
+    return this.httpClient.get<Incidencia[]>(`${this.url}/incidencia/listar`);
   }
-  buscarporId(id: number) {
-    return this.httpClient.get<Incidencia>(environment.apiUrl + '/incidencia/buscar-por-id/{id}');
+
+  buscarporId(id: number): Observable<Incidencia> {
+    const params = new HttpParams().set('id_incidencia', id);
+    return this.httpClient.get<Incidencia>(`${this.url}/incidencia/buscar-por-id`, { params });
   }
-  buscarPorEstadoAtencion(estadoAtencion: string): Observable<Incidencia[]>{
-    return this.httpClient.get<Incidencia[]>(environment.apiUrl+'/incidencia/estado/{estadoAtencion}');
+
+  buscarPorEstadoAtencion(estadoAtencion: string): Observable<Incidencia[]> {
+    const params = new HttpParams().set('estado_atencion', estadoAtencion);
+    return this.httpClient.get<Incidencia[]>(`${this.url}/incidencia/buscar-por-estado-atencion`, {
+      params,
+    });
   }
-  actualizar(incidencia:IncidenciaActualizar){
-    return this.httpClient.put<Incidencia>(environment.apiUrl + '/incidencia/actualizar', incidencia);
+
+  actualizar(incidencia: any): Observable<Incidencia> {
+    return this.httpClient.put<Incidencia>(`${this.url}/incidencia/actualizar`, incidencia);
   }
-  eliminar(id:number){
-    return this.httpClient.request('delete',environment.apiUrl + '/incidencia/eliminar',{body: id});
+
+  eliminar(id: number): Observable<any> {
+    const params = new HttpParams().set('id_incidencia', id);
+    return this.httpClient.delete(`${this.url}/incidencia/eliminar`, { params });
   }
 }

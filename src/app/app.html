@@ -1,24 +1,49 @@
-<!-- La barra superior solo se renderiza si el usuario tiene un token activo -->
-<mat-toolbar class="main-navbar" *ngIf="authService.estaLogueado()">
+<!-- BARRA PÚBLICA (Antes de iniciar sesión) -->
+<mat-toolbar class="main-navbar" *ngIf="!authService.estaLogueado()">
+  <a routerLink="/home" class="navbar-brand brand-link">
+    <div class="shield-icon-nav">
+      <mat-icon>security</mat-icon>
+    </div>
+    <div class="brand-text">
+      <span class="title">CIVIX</span>
+    </div>
+  </a>
 
-  <!-- Logo Izquierda -->
+  @if (router.url.startsWith('/home') || router.url === '/') {
+    <span class="spacer"></span>
+
+    <div class="navbar-links">
+      <a mat-button routerLink="/home" routerLinkActive="active-link">Inicio</a>
+    </div>
+
+    <span class="spacer"></span>
+
+    <div class="public-auth-actions">
+      <a routerLink="/login" class="btn-nav-outline">Iniciar sesión</a>
+      <a routerLink="/usuarios-registro" class="btn-nav-solid">Registrarse</a>
+    </div>
+  }
+</mat-toolbar>
+
+<!-- BARRA PRIVADA (Cuando ya iniciaste sesión) -->
+<mat-toolbar class="main-navbar" *ngIf="authService.estaLogueado()">
   <div class="navbar-brand">
     <div class="shield-icon-nav">
       <mat-icon>security</mat-icon>
     </div>
     <div class="brand-text">
-      <span class="title">Portal Ciudadano</span>
+      <span class="title">
+        {{ authService.getRol() === 'ADMINISTRADOR' ? 'Portal Administrador' : 'Portal Ciudadano' }}
+      </span>
       <span class="subtitle">MUNICIPALIDAD</span>
     </div>
   </div>
 
-  <!-- Enlaces Centro -->
   <div class="navbar-links">
-    <a mat-button routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Inicio</a>
     <a mat-button routerLink="/incidencia-crear" routerLinkActive="active-link">Reportar</a>
     <a mat-button routerLink="/mis-incidencias" routerLinkActive="active-link">Seguimiento</a>
     <a mat-button routerLink="/mapa" routerLinkActive="active-link">Mapa</a>
-    @if (authService.getRol()==='ADMINISTRADOR') {
+    @if (authService.getRol() === 'ADMINISTRADOR') {
       <a mat-button routerLink="/usuarios-lista" routerLinkActive="active-link">Listar usuarios</a>
       <a mat-button routerLink="/incidencia-todas" routerLinkActive="active-link">Reportes</a>
     }
@@ -26,16 +51,140 @@
 
   <span class="spacer"></span>
 
-  <!-- Perfil Derecha -->
   <div class="user-profile">
-    <span class="user-name">Usuario Conectado</span>
-    <div class="avatar-circle">US</div>
+    <span class="user-name">{{ authService.nombreUsuario() || 'Cargando...' }}</span>
+    <div class="avatar-circle">{{ authService.inicialesUsuario() }}</div>
     <button mat-icon-button (click)="cerrarSesion()" title="Cerrar sesión" color="warn">
       <mat-icon>logout</mat-icon>
     </button>
   </div>
-
 </mat-toolbar>
 
-<!-- Aquí se cargan dinámicamente las pantallas (Login, Formularios, etc.) -->
-<router-outlet></router-outlet>
+<div class="app-viewport" [style.zoom]="escalaTexto() + '%'">
+  <router-outlet></router-outlet>
+</div>
+
+<!-- Línea horizontal móvil de Guía de Lectura (Global) -->
+@if (guiaLectura()) {
+  <div class="reading-guide-bar" [style.top.px]="posicionGuiaY()"></div>
+}
+
+<!-- Botón flotante global de accesibilidad -->
+<button
+  type="button"
+  class="accessibility-fab"
+  aria-label="Opciones de Accesibilidad"
+  (click)="toggleAccesibilidad()"
+>
+  <mat-icon>accessible</mat-icon>
+</button>
+
+<!-- Pop-up global de Opciones de Accesibilidad -->
+@if (mostrarAccesibilidad()) {
+  <div class="a11y-popover" [class.high-contrast-pop]="altoContraste()">
+    <div class="a11y-header">
+      <div class="a11y-icon-badge">
+        <mat-icon>accessible</mat-icon>
+      </div>
+      <div class="a11y-header-text">
+        <h3>Opciones de Accesibilidad</h3>
+        <p>Personalice la experiencia de navegación para que se adapte mejor a sus necesidades visuales y motoras.</p>
+      </div>
+      <button type="button" class="a11y-close-btn" (click)="mostrarAccesibilidad.set(false)">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="a11y-divider"></div>
+
+    <div class="a11y-option-row">
+      <div class="a11y-option-info">
+        <span class="a11y-option-title">Alto Contraste</span>
+        <span class="a11y-option-desc">
+          Cambia el esquema de colores a fondo oscuro y texto claro para mejorar la visibilidad.
+        </span>
+      </div>
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="altoContraste()"
+          (change)="toggleAltoContraste($any($event.target).checked)"
+        />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="a11y-divider"></div>
+
+    <div class="a11y-option-row">
+      <div class="a11y-option-info">
+        <span class="a11y-option-title">Escala de Texto</span>
+        <span class="a11y-option-desc">
+          Aumente o disminuya el tamaño de las letras de todo el sitio municipal.
+        </span>
+      </div>
+      <div class="scale-controls">
+        <span class="letter-small">A</span>
+        <input
+          type="range"
+          min="85"
+          max="125"
+          step="5"
+          [value]="escalaTexto()"
+          (input)="cambiarEscalaTexto($event)"
+          class="scale-slider"
+        />
+        <span class="letter-large">A</span>
+        <span class="scale-badge">{{ escalaTexto() }}%</span>
+      </div>
+    </div>
+
+    <div class="a11y-divider"></div>
+
+    <div class="a11y-option-row">
+      <div class="a11y-option-info">
+        <span class="a11y-option-title">Guía de Lectura</span>
+        <span class="a11y-option-desc">
+          Muestra una línea horizontal móvil que ayuda a enfocar la lectura a lo largo de los textos del portal.
+        </span>
+      </div>
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="guiaLectura()"
+          (change)="guiaLectura.set($any($event.target).checked)"
+        />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="a11y-divider"></div>
+
+    <div class="a11y-option-row">
+      <div class="a11y-option-info">
+        <span class="a11y-option-title">Reducir Movimiento</span>
+        <span class="a11y-option-desc">
+          Desactiva las animaciones y efectos visuales de transición en las páginas para evitar distracciones o mareos.
+        </span>
+      </div>
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="reducirMovimiento()"
+          (change)="toggleReducirMovimiento($any($event.target).checked)"
+        />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="a11y-divider"></div>
+
+    <div class="a11y-footer">
+      <span class="wcag-badge">WCAG 2.1 AA</span>
+      <p>
+        Este portal cumple con las directrices de accesibilidad para el contenido web WCAG 2.1 de nivel doble AA,
+        garantizando el acceso a todos los ciudadanos.
+      </p>
+    </div>
+  </div>
+}

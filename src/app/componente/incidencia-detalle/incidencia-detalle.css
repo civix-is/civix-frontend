@@ -1,0 +1,389 @@
+.detail-page {
+  background-color: #f3f5f8;
+  min-height: calc(100vh - 72px);
+  padding: 28px 40px 44px 40px;
+  box-sizing: border-box;
+}
+
+.detail-container {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #0d5cab;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 12px;
+}
+
+.back-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.ticket-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0d5cab;
+  letter-spacing: 0.7px;
+  margin-bottom: 4px;
+}
+
+.ticket-main-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.sla-box {
+  min-width: 260px;
+}
+
+.sla-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.sla-hours {
+  color: #d97706;
+  font-weight: 700;
+}
+
+.sla-track {
+  height: 7px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.sla-fill {
+  height: 100%;
+  background: #f59e0b;
+  border-radius: 999px;
+}
+
+/* Grid principal de 2 columnas */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.left-column,
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.info-card {
+  background: #ffffff;
+  border: 1px solid #e6ebf1;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+}
+
+.card-heading {
+  margin: 0 0 14px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.description-text {
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.field-group {
+  margin-bottom: 18px;
+}
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.location-pill {
+  display: inline-block;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #1e293b;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.no-evidence {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.evidence-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.evidence-card {
+  position: relative;
+  width: 120px;
+  height: 110px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+}
+
+.evidence-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.evidence-tag {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* Mapa de geolocalización */
+.detail-map-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.detail-map {
+  width: 100%;
+  height: 210px;
+}
+
+.detail-map .leaflet-tile-pane {
+  filter: saturate(0.68) brightness(1.03);
+}
+
+::ng-deep .detail-pin-wrapper {
+  background: transparent;
+  border: none;
+}
+
+::ng-deep .detail-map-tag {
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Panel de Administración */
+.admin-panel {
+  border-color: #bfdbfe;
+  background: #f8fbff;
+}
+
+.admin-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.admin-panel-header mat-icon {
+  color: #0d5cab;
+}
+
+.admin-panel-header .card-heading {
+  margin: 0;
+  color: #0d5cab;
+}
+
+.admin-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn-save-admin {
+  width: 100%;
+  background-color: #0d5cab !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  height: 42px;
+}
+
+.msg-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin: 0 0 10px 0;
+}
+
+.msg-success {
+  color: #059669;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+/* Línea de tiempo */
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 14px;
+}
+
+.timeline-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 18px;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.dot-green { background: #10b981; }
+.dot-amber { background: #f59e0b; }
+.dot-red { background: #ef4444; }
+.dot-gray { background: #cbd5e1; }
+
+.line {
+  width: 2px;
+  flex: 1;
+  background: #e2e8f0;
+  min-height: 36px;
+  margin: 4px 0;
+}
+
+.timeline-content {
+  padding-bottom: 22px;
+  flex: 1;
+}
+
+.step-title {
+  margin: 0 0 2px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.timeline-item.muted .step-title {
+  color: #64748b;
+}
+
+.step-date {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0d5cab;
+  margin-bottom: 4px;
+}
+
+.step-pending {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.step-desc {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.area-chip {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #eef4fb;
+  color: #0d5cab;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.loading-box {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+}
+
+@media (max-width: 960px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .two-cols {
+    grid-template-columns: 1fr;
+  }
+}

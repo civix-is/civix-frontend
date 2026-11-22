@@ -1,6 +1,6 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
@@ -8,7 +8,9 @@ export class AuthService {
   private url = environment.apiUrl;
   private httpClient: HttpClient = inject(HttpClient);
 
-  // Agregamos el parámetro opcional 'recordarme'
+  nombreUsuario = signal<string>('');
+  inicialesUsuario = signal<string>('US');
+
   login(credenciales: { correo: string; password: string; recordarme?: boolean }): Observable<any> {
     return this.httpClient
       .post(this.url + '/auth/login', credenciales, { observe: 'response' })
@@ -18,12 +20,12 @@ export class AuthService {
           if (token) {
             const limpiarToken = token.startsWith('Bearer ') ? token.substring(7) : token;
 
-            // Si marcó la casilla, persiste en localStorage. Si no, en sessionStorage.
             if (credenciales.recordarme) {
               localStorage.setItem('token', limpiarToken);
             } else {
               sessionStorage.setItem('token', limpiarToken);
             }
+            this.cargarDatosUsuario();
           }
         }),
       );
@@ -32,10 +34,11 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
+    this.nombreUsuario.set('');
+    this.inicialesUsuario.set('US');
   }
 
   getToken(): string | null {
-    // Busca en ambos almacenamientos
     return localStorage.getItem('token') || sessionStorage.getItem('token');
   }
 
@@ -44,21 +47,31 @@ export class AuthService {
     if (!token) return false;
 
     try {
-      // Leemos el payload para verificar si el token ya caducó
       const payloadBase64 = token.split('.')[1];
       const payloadJson = JSON.parse(atob(payloadBase64));
-
-      // 'exp' viene en segundos desde Spring Boot, lo pasamos a milisegundos
       const expiracion = payloadJson.exp * 1000;
       const tokenExpirado = expiracion < Date.now();
 
       if (tokenExpirado) {
-        this.logout(); // Limpiamos rastros si ya caducó
+        this.logout();
         return false;
       }
       return true;
-    } catch (e) {
+    } catch {
       return false;
+    }
+  }
+
+  getCorreo(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(atob(base64));
+      return payload.sub || null;
+    } catch {
+      return null;
     }
   }
 
@@ -68,7 +81,6 @@ export class AuthService {
 
     try {
       const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-
       const payload = JSON.parse(atob(base64));
       const roles: string[] = payload.roles || [];
 
@@ -82,5 +94,26 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  cargarDatosUsuario(): void {
+    const correo = this.getCorreo();
+    if (!correo) return;
+
+    const params = new HttpParams().set('correo', correo);
+    this.httpClient.get<any>(`${this.url}/usuario/buscar-por-correo`, { params }).subscribe({
+      next: (usuario) => {
+        const nombreCompleto = `${usuario.nombre || ''} ${usuario.apellido || ''}`.trim();
+        this.nombreUsuario.set(nombreCompleto || correo);
+
+        const iniNombre = usuario.nombre ? usuario.nombre.charAt(0).toUpperCase() : '';
+        const iniApellido = usuario.apellido ? usuario.apellido.charAt(0).toUpperCase() : '';
+        this.inicialesUsuario.set(iniNombre + iniApellido || correo.substring(0, 2).toUpperCase());
+      },
+      error: () => {
+        this.nombreUsuario.set(correo);
+        this.inicialesUsuario.set(correo.substring(0, 2).toUpperCase());
+      },
+    });
   }
 }

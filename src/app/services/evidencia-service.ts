@@ -1,25 +1,35 @@
-import { inject, Service } from '@angular/core';
-import {environment} from '../../environments/environment';
+import { inject, Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import {Observable} from 'rxjs';
+import { Observable } from 'rxjs';
 
-@Service()
+export interface EvidenciaRegistroDTO {
+  idIncidencia: number;
+  urlArchivo: string;
+  tipoArchivo?: string;
+  fase?: string;
+}
+
+@Injectable({ providedIn: 'root' })
 export class EvidenciaService {
   private url = environment.apiUrl;
-  private httpClient: HttpClient = inject(HttpClient);
-  constructor() {}
-  registrar(evidencia:EvidenciaService){
-    return this.httpClient.post(environment.apiUrl+'/evidencia/registrar', evidencia);
+  private httpClient = inject(HttpClient);
+
+  registrar(evidencia: EvidenciaRegistroDTO): Observable<any> {
+    return this.httpClient.post(`${this.url}/evidencia/registrar`, evidencia);
   }
-  listar():Observable<EvidenciaService[]>{
-    return this.httpClient.get<EvidenciaService[]>(environment.apiUrl+'/evidencia/listar');
+
+  listar(): Observable<any[]> {
+    return this.httpClient.get<any[]>(`${this.url}/evidencia/listar`);
   }
-  buscarPorIncidencia(idIncidencia:number):Observable<EvidenciaService[]>{
-    const params= new HttpParams().set('idIncidencia',idIncidencia);
-    return this.httpClient.get<EvidenciaService[]>(environment.apiUrl+'/evidencia/buscar-por-incidencia');
+
+  buscarPorIncidencia(idIncidencia: number): Observable<any[]> {
+    const params = new HttpParams().set('id_incidencia', idIncidencia);
+    return this.httpClient.get<any[]>(`${this.url}/evidencia/buscar-por-incidencia`, { params });
   }
-  eliminar(id:number){
-    const params= new HttpParams().set('id',id);
-    return this.httpClient.delete(environment.apiUrl+'/evidencia/eliminar/',{params});
+
+  eliminar(id: number): Observable<any> {
+    const params = new HttpParams().set('id_evidencia', id);
+    return this.httpClient.delete(`${this.url}/evidencia/eliminar`, { params });
   }
 }

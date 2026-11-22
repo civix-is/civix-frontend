@@ -1,0 +1,180 @@
+<div class="map-workspace">
+  <!-- PANEL LATERAL IZQUIERDO: FILTROS DEL MAPA -->
+  <aside class="filters-sidebar">
+    <div class="sidebar-header">
+      <h2>Filtros del Mapa</h2>
+      <p>Explora las incidencias reportadas en tu comunidad.</p>
+    </div>
+
+    <!-- Checkboxes de Categorías -->
+    <div class="categories-filter-list">
+      @for (cat of categorias(); track cat.idCategoria) {
+        <label class="checkbox-row">
+          <input
+            type="checkbox"
+            [checked]="categoriasSeleccionadas().has(cat.idCategoria)"
+            (change)="toggleCategoria(cat.idCategoria, $any($event.target).checked)"
+          />
+          <span class="custom-check"></span>
+          <span class="cat-label">{{ cat.nombre }}</span>
+        </label>
+      }
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Selector de Estado -->
+    <div class="select-group">
+      <label class="filter-group-label">ESTADO</label>
+      <select
+        class="sidebar-select"
+        [value]="estadoFiltro()"
+        (change)="estadoFiltro.set($any($event.target).value)"
+      >
+        <option value="TODOS">Todos los Estados</option>
+        <option value="PENDIENTE">Recibido</option>
+        <option value="EN_PROCESO">En Proceso</option>
+        <option value="ATENDIDO">Resuelto</option>
+        <option value="RECHAZADO">Rechazado</option>
+      </select>
+    </div>
+
+    <!-- Selector de Rango de Fecha -->
+    <div class="select-group">
+      <label class="filter-group-label">RANGO DE FECHA</label>
+      <select
+        class="sidebar-select"
+        [value]="rangoFecha()"
+        (change)="rangoFecha.set($any($event.target).value)"
+      >
+        <option value="7">Últimos 7 días</option>
+        <option value="30">Últimos 30 días</option>
+        <option value="90">Últimos 90 días</option>
+        <option value="0">Todo el historial</option>
+      </select>
+    </div>
+
+    <button type="button" class="btn-apply-filters" (click)="aplicarFiltros()">
+      Aplicar Filtros
+    </button>
+  </aside>
+
+  <!-- ÁREA DERECHA: MAPA INTERACTIVO + TARJETA INFERIOR DE DETALLE -->
+  <main class="map-canvas-area">
+    <div #mapaComunitario class="community-leaflet-map"></div>
+
+    <!-- Tarjeta inferior flotante de la incidencia seleccionada -->
+    @if (incidenciaSeleccionada(); as sel) {
+      <div class="bottom-detail-card">
+        <!-- Imagen izquierda con badge de estado y código de ticket -->
+        <div class="card-media">
+          @if (fotoSeleccionada()) {
+            <img [src]="fotoSeleccionada()" [alt]="sel.titulo" />
+          } @else {
+            <div class="media-placeholder">
+              <mat-icon>location_city</mat-icon>
+              <span>Sin foto adjunta</span>
+            </div>
+          }
+
+          <span class="media-status-pill" [ngClass]="'pill-' + sel.estadoAtencion.toLowerCase()">
+            <span class="status-dot"></span>
+            {{ obtenerEtiquetaEstado(sel.estadoAtencion) }}
+          </span>
+
+          <span class="media-ticket-tag">
+            {{ sel.codigoIncidencia || 'INC-' + sel.idIncidencia }}
+          </span>
+        </div>
+
+        <!-- Contenido derecho -->
+        <div class="card-body">
+          <div class="card-top-row">
+            <div class="meta-left">
+              <span class="category-chip">
+                {{ (sel.categoria?.nombre || 'INCIDENCIA') | uppercase }}
+              </span>
+              <span class="date-text">
+                <mat-icon>calendar_today</mat-icon>
+                {{ sel.fechaRegistro | date: 'dd \'de\' MMMM, yyyy' }}
+              </span>
+            </div>
+
+            <div class="neighbors-support">
+              <div class="avatar-stack">
+                <span class="mini-av av1">MG</span>
+                <span class="mini-av av2">JP</span>
+                <span class="mini-av av3">CR</span>
+                <span class="mini-av av-more">+{{ (apoyosVecinales()[sel.idIncidencia]?.count || 12) - 3 }}</span>
+              </div>
+              <span class="neighbors-text">
+                <strong>{{ apoyosVecinales()[sel.idIncidencia]?.count || 12 }} vecinos</strong><br />
+                apoyan esto
+              </span>
+            </div>
+          </div>
+
+          <h3 class="card-title">{{ sel.titulo }}</h3>
+          <p class="card-desc">{{ sel.descripcion }}</p>
+
+          <!-- Pop-up inline para Calificar Reporte -->
+          @if (mostrarCalificacion()) {
+            <div class="rating-bar">
+              <span>Califica la atención municipal:</span>
+              <div class="stars-row">
+                @for (star of [1, 2, 3, 4, 5]; track star) {
+                  <button
+                    type="button"
+                    class="star-btn"
+                    [class.active]="star <= estrellasSeleccionadas()"
+                    (click)="estrellasSeleccionadas.set(star)"
+                  >
+                    ★
+                  </button>
+                }
+              </div>
+              <button type="button" class="btn-confirm-rate" (click)="guardarCalificacion()">
+                {{ calificacionGuardada() ? '¡Gracias!' : 'Enviar' }}
+              </button>
+            </div>
+          }
+
+          <!-- Barra de acciones inferior -->
+          <div class="card-actions-row">
+            <div class="links-left">
+              <button type="button" class="action-link blue" (click)="ubicarEnMapa()">
+                <mat-icon>place</mat-icon>
+                Ubicar en Mapa
+              </button>
+              <button type="button" class="action-link gray" (click)="irADetalle()">
+                <mat-icon>chat_bubble_outline</mat-icon>
+                Ver Seguimiento
+              </button>
+            </div>
+
+            <div class="buttons-right">
+              <button
+                type="button"
+                class="btn-neighbor-support"
+                [class.supported]="apoyosVecinales()[sel.idIncidencia]?.apoyado"
+                (click)="toggleApoyoVecinal()"
+              >
+                <mat-icon>thumb_up</mat-icon>
+                Apoyo Vecinal
+              </button>
+
+              <button
+                type="button"
+                class="btn-rate-report"
+                (click)="mostrarCalificacion.set(!mostrarCalificacion())"
+              >
+                <mat-icon>star</mat-icon>
+                Calificar Reporte
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </main>
+</div>

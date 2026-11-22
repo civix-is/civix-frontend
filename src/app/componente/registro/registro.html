@@ -1,37 +1,176 @@
-<h1>registro works!</h1>
+<div class="register-page-container">
+  <mat-card class="register-card mat-elevation-z3">
+    <!-- Stepper superior de 2 pasos (Sin Preferencias) -->
+    <div class="stepper-header">
+      <div class="step-item" [class.active]="pasoActual() === 1" [class.completed]="pasoActual() === 2">
+        <span class="step-circle">
+          @if (pasoActual() === 2) {
+            <mat-icon>check</mat-icon>
+          } @else {
+            1
+          }
+        </span>
+        <span class="step-label">Datos Personales</span>
+      </div>
 
-<mat-card class="example-card">
-  <mat-card-title>Formulario de Registro Usuario</mat-card-title>
-  <mat-card-content>
-    <form [formGroup]="usuarioForm" class="form-container" (ngSubmit)="onSubmit()">
-      <mat-form-field appearance="fill">
-        <mat-label>Nombre</mat-label>
-        <input matInput formControlName="nombre" placeholder="Ingrese su nombre" />
-      </mat-form-field>
-      <mat-form-field appearance="fill">
-        <mat-label>Apellido</mat-label>
-        <input matInput formControlName="apellido" placeholder="Ingrese su apellido" />
-      </mat-form-field>
-      <mat-form-field appearance="fill">
-        <mat-label>Email</mat-label>
-        <input matInput formControlName="correo" placeholder="Ingrese su correo electronico" />
-      </mat-form-field>
-      <mat-form-field appearance="fill">
-        <mat-label>DNI:</mat-label>
-        <input matInput formControlName="dni" placeholder="Ingrese su dni" />
-      </mat-form-field>
-      <mat-form-field appearance="fill">
-        <mat-label>Telefono</mat-label>
-        <input matInput formControlName="telefono" placeholder="Ingrese su telefono" />
-      </mat-form-field>
-      <mat-form-field appearance="fill">
-        <mat-label>Contraseña</mat-label>
-        <input matInput [type]="hide ? 'password' : 'text'" formControlName="password" placeholder="Ingrese su contraseña" />
-        <button mat-icon-button matSuffix (click)="hide = !hide" [attr.aria-label]="'Ocultar contraseña'" [attr.aria-pressed]="hide" type="button">
-          <mat-icon>{{hide ? 'visibility_off' : 'visibility'}}</mat-icon>
+      <div class="step-connector" [class.filled]="pasoActual() === 2"></div>
+
+      <div class="step-item" [class.active]="pasoActual() === 2">
+        <span class="step-circle">2</span>
+        <span class="step-label">Verificación</span>
+      </div>
+    </div>
+
+    <div class="divider-line"></div>
+
+    <!-- PASO 1: DATOS PERSONALES -->
+    @if (pasoActual() === 1) {
+      <div class="step-title-row">
+        <h2>Paso 1: Datos Personales</h2>
+        <span class="progress-badge">Progreso: 1/2</span>
+      </div>
+
+      <form [formGroup]="usuarioForm" (ngSubmit)="irAPaso2()" class="step-form">
+        <div class="grid-two-cols">
+          <div class="field-block">
+            <label class="field-label">DNI / Documento de Identidad</label>
+            <input
+              type="text"
+              maxlength="8"
+              formControlName="dni"
+              placeholder="45892154"
+              class="custom-input"
+            />
+          </div>
+
+          <div class="field-block">
+            <label class="field-label">Teléfono de Contacto</label>
+            <input
+              type="text"
+              maxlength="9"
+              formControlName="telefono"
+              placeholder="987654321"
+              class="custom-input"
+            />
+          </div>
+        </div>
+
+        <div class="grid-two-cols">
+          <div class="field-block">
+            <label class="field-label">Nombres</label>
+            <input
+              type="text"
+              formControlName="nombre"
+              placeholder="María"
+              class="custom-input shaded"
+            />
+          </div>
+
+          <div class="field-block">
+            <label class="field-label">Apellidos</label>
+            <input
+              type="text"
+              formControlName="apellido"
+              placeholder="García López"
+              class="custom-input shaded"
+            />
+          </div>
+        </div>
+
+        <div class="grid-two-cols">
+          <div class="field-block">
+            <label class="field-label">Correo Electrónico</label>
+            <input
+              type="email"
+              formControlName="correo"
+              placeholder="ejemplo@gmail.com"
+              class="custom-input"
+            />
+          </div>
+
+          <div class="field-block">
+            <label class="field-label">Contraseña (mín. 8 caracteres)</label>
+            <div class="password-wrapper">
+              <input
+                [type]="hidePassword() ? 'password' : 'text'"
+                formControlName="password"
+                placeholder="••••••••"
+                class="custom-input password-input"
+              />
+              <button
+                type="button"
+                class="eye-btn"
+                (click)="hidePassword.set(!hidePassword())"
+                tabindex="-1"
+              >
+                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        @if (errorPaso1()) {
+          <div class="error-box">{{ errorPaso1() }}</div>
+        }
+
+        <div class="step-footer-1">
+          <span class="reniec-note">
+            ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión aquí</a>
+          </span>
+          <button type="submit" class="btn-primary-blue">Siguiente</button>
+        </div>
+      </form>
+    }
+
+    <!-- PASO 2: VERIFICACIÓN -->
+    @if (pasoActual() === 2) {
+      <div class="step-title-row">
+        <h2>Paso 2: Verificación</h2>
+        <span class="progress-badge">Progreso: 2/2</span>
+      </div>
+
+      <div class="otp-info-banner">
+        Hemos enviado un código de verificación de <strong>6 dígitos</strong> a tu teléfono
+        <strong>{{ usuarioForm.value.telefono }}</strong>.
+      </div>
+
+      <div class="otp-boxes-row" (paste)="onOtpPaste($event)">
+        @for (digito of digitosOtp(); track $index; let i = $index) {
+          <input
+            #otpInput
+            type="text"
+            inputmode="numeric"
+            maxlength="1"
+            class="otp-box"
+            [class.filled]="digitosOtp()[i] !== ''"
+            [value]="digitosOtp()[i]"
+            (input)="onOtpInput(i, $event)"
+            (keydown)="onOtpKeyDown(i, $event)"
+            placeholder="–"
+          />
+        }
+      </div>
+
+      <div class="resend-block">
+        <span>¿No recibiste el código?</span>
+        <button type="button" class="resend-link" (click)="reenviarCodigo()">Reenviar código</button>
+        @if (mensajeReenvio()) {
+          <p class="resend-ok">{{ mensajeReenvio() }}</p>
+        }
+      </div>
+
+      @if (errorPaso2()) {
+        <div class="error-box">{{ errorPaso2() }}</div>
+      }
+
+      <div class="step-footer-2">
+        <button type="button" class="btn-secondary-outline" (click)="volverAPaso1()" [disabled]="enviando()">
+          Atrás
         </button>
-      </mat-form-field>
-      <button type="submit" mat-raised-button color="primary">Registrar</button>
-    </form>
-  </mat-card-content>
-</mat-card>
+        <button type="button" class="btn-primary-blue" (click)="finalizarRegistro()" [disabled]="enviando()">
+          {{ enviando() ? 'Registrando...' : 'Finalizar Registro' }}
+        </button>
+      </div>
+    }
+  </mat-card>
+</div>

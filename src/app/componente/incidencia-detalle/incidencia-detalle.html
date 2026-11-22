@@ -1,1 +1,220 @@
-<p>incidencia-detalle works!</p>
+<div class="detail-page">
+  <div class="detail-container">
+    @if (cargando()) {
+      <div class="loading-box">Cargando detalle del ticket...</div>
+    } @else if (incidencia(); as inc) {
+      <!-- Encabezado superior con SLA -->
+      <div class="detail-header">
+        <div class="header-left">
+          <button type="button" class="back-btn" (click)="volver()">
+            <mat-icon>arrow_back</mat-icon>
+            Volver a Seguimiento
+          </button>
+          <span class="ticket-eyebrow">TICKET DETALLE</span>
+          <h1 class="ticket-main-title">
+            {{ inc.codigoIncidencia || 'INC-' + inc.idIncidencia }}: {{ inc.categoria?.nombre || inc.titulo }}
+          </h1>
+        </div>
+
+        <div class="sla-box">
+          <div class="sla-labels">
+            <span>Plazo de Resolución SLA</span>
+            <span class="sla-hours">{{ inc.categoria?.horasEstimadas || 48 }}h máximo</span>
+          </div>
+          <div class="sla-track">
+            <div class="sla-fill" [style.width.%]="calcularPorcentajeSLA()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout de 2 columnas (Izquierda: Detalles + Mapa / Derecha: Gestión Admin + Línea de Tiempo) -->
+      <div class="detail-grid">
+        <!-- Columna Izquierda -->
+        <div class="left-column">
+          <div class="info-card">
+            <h2 class="card-heading">Detalles de la Incidencia</h2>
+            <p class="description-text">{{ inc.descripcion }}</p>
+
+            <div class="field-group">
+              <span class="field-label">Ubicación Detectada</span>
+              <div class="location-pill">
+                {{ inc.direccionReferencia || 'Sin dirección especificada' }}
+              </div>
+            </div>
+
+            <div class="field-group">
+              <span class="field-label">Evidencias fotográficas</span>
+              @if (evidencias().length === 0) {
+                <p class="no-evidence">No se adjuntaron fotografías en este reporte.</p>
+              } @else {
+                <div class="evidence-grid">
+                  @for (ev of evidencias(); track ev.idEvidencia) {
+                    <div class="evidence-card">
+                      <img [src]="ev.urlArchivo" [alt]="ev.fase || 'Evidencia'" />
+                      <span class="evidence-tag">{{ ev.fase || 'Inicial' }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Tarjeta de Geolocalización -->
+          <div class="info-card">
+            <h2 class="card-heading">Geolocalización</h2>
+            <div class="detail-map-wrapper">
+              <div #mapaDetalle class="detail-map"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="right-column">
+          <!-- Panel exclusivo para Administrador: Cambiar estado y documentar avances -->
+          @if (esAdmin() && estadosDisponibles().length > 0) {
+            <div class="info-card admin-panel">
+              <div class="admin-panel-header">
+                <mat-icon>admin_panel_settings</mat-icon>
+                <h2 class="card-heading">Gestión Municipal y Avances</h2>
+              </div>
+
+              <form [formGroup]="gestionForm" (ngSubmit)="guardarAvanceAdmin()" class="admin-form">
+                <label class="admin-label">Estado de Atención</label>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-select formControlName="estadoAtencion">
+                    @for (est of estadosDisponibles(); track est.valor) {
+                      <mat-option [value]="est.valor">{{ est.etiqueta }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <div class="two-cols">
+                  <div>
+                    <label class="admin-label">Prioridad</label>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-select formControlName="prioridad">
+                        <mat-option value="BAJA">Baja</mat-option>
+                        <mat-option value="MEDIA">Media</mat-option>
+                        <mat-option value="ALTA">Alta</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+
+                  <div>
+                    <label class="admin-label">Área / Cuadrilla Asignada</label>
+                    <mat-form-field appearance="outline" class="full-width">
+                      <input matInput formControlName="areaAsignada" placeholder="Ej. Cuadrilla Vial N° 4" />
+                    </mat-form-field>
+                  </div>
+                </div>
+
+                <label class="admin-label">Documentar avance o resolución</label>
+                <mat-form-field appearance="outline" class="full-width">
+                  <textarea
+                    matInput
+                    formControlName="comentario"
+                    rows="3"
+                    placeholder="Describe las acciones tomadas, inspección o resolución final..."
+                  ></textarea>
+                </mat-form-field>
+
+                @if (mensajeError()) {
+                  <p class="msg-error">{{ mensajeError() }}</p>
+                }
+                @if (mensajeExito()) {
+                  <p class="msg-success">{{ mensajeExito() }}</p>
+                }
+
+                <button
+                  mat-flat-button
+                  type="submit"
+                  class="btn-save-admin"
+                  [disabled]="guardandoAvance()"
+                >
+                  {{ guardandoAvance() ? 'Guardando...' : 'Registrar Avance / Actualizar' }}
+                </button>
+              </form>
+            </div>
+          }
+
+          <!-- Línea de Tiempo de Atención (Visible para Ciudadano y Administrador) -->
+          <div class="info-card timeline-card">
+            <h2 class="card-heading">Línea de Tiempo de Atención</h2>
+
+            <div class="timeline-list">
+              @for (item of historial(); track item.idHistorial; let last = $last) {
+                <div class="timeline-item">
+                  <div class="timeline-marker">
+                    <span
+                      class="dot"
+                      [ngClass]="{
+                        'dot-green': item.estadoNuevo === 'PENDIENTE' || item.estadoNuevo === 'ATENDIDO',
+                        'dot-amber': item.estadoNuevo === 'EN_PROCESO',
+                        'dot-red': item.estadoNuevo === 'RECHAZADO'
+                      }"
+                    ></span>
+                    @if (!last) {
+                      <span class="line"></span>
+                    }
+                  </div>
+
+                  <div class="timeline-content">
+                    <h4 class="step-title">
+                      {{
+                        item.estadoNuevo === 'PENDIENTE'
+                          ? 'Reporte Recibido'
+                          : item.estadoNuevo === 'EN_PROCESO'
+                            ? 'En Atención / Cuadrilla Asignada'
+                            : item.estadoNuevo === 'ATENDIDO'
+                              ? 'Cerrado y Resuelto'
+                              : 'Reporte Rechazado'
+                      }}
+                    </h4>
+                    <span class="step-date">
+                      {{ item.fechaCambio | date: 'dd/MM/yyyy, hh:mm a' }}
+                      @if (item.usuarioAccion) {
+                        · Por {{ item.usuarioAccion }}
+                      }
+                    </span>
+                    <p class="step-desc">{{ item.comentario }}</p>
+                    @if (item.areaAsignada) {
+                      <span class="area-chip">Área: {{ item.areaAsignada }}</span>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Pasos futuros pendientes si el ticket aún no se cierra -->
+              @if (inc.estadoAtencion === 'PENDIENTE') {
+                <div class="timeline-item muted">
+                  <div class="timeline-marker">
+                    <span class="dot dot-gray"></span>
+                    <span class="line"></span>
+                  </div>
+                  <div class="timeline-content">
+                    <h4 class="step-title">Asignación de Cuadrilla</h4>
+                    <span class="step-pending">Pendiente</span>
+                    <p class="step-desc">En espera de revisión y asignación municipal.</p>
+                  </div>
+                </div>
+              }
+
+              @if (inc.estadoAtencion === 'PENDIENTE' || inc.estadoAtencion === 'EN_PROCESO') {
+                <div class="timeline-item muted">
+                  <div class="timeline-marker">
+                    <span class="dot dot-gray"></span>
+                  </div>
+                  <div class="timeline-content">
+                    <h4 class="step-title">Cerrado y Resuelto</h4>
+                    <span class="step-pending">Pendiente</span>
+                    <p class="step-desc">Confirmación de atención y cierre del ticket.</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

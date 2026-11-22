@@ -1,1 +1,131 @@
-<p>home-component works!</p>
+<div class="landing-page">
+  <!-- SECCIÓN HERO (2 Columnas: Texto + Mapa con reportes) -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <div class="hero-left">
+        <span class="gov-badge">GOBIERNO LOCAL DIGITAL</span>
+        <h1 class="hero-title">Reporta incidencias en tu distrito</h1>
+        <p class="hero-subtitle">
+          Colabora con tu municipalidad para solucionar problemas de alumbrado, pistas,
+          limpieza y parques en menos tiempo. Tu reporte llega directo al área encargada.
+        </p>
+
+        <div class="hero-actions">
+          <a routerLink="/login" class="btn-start-now">Empezar ahora</a>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="hero-map-card">
+          <div #mapaInicio class="hero-leaflet-map"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN CÓMO FUNCIONA EL PORTAL -->
+  <section class="how-section">
+    <div class="how-container">
+      <span class="section-eyebrow">GESTIÓN TRANSPARENTE</span>
+      <h2 class="section-title">¿Cómo funciona el Portal?</h2>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-card-top">
+            <span class="step-num">1</span>
+            <mat-icon class="step-icon">crop_free</mat-icon>
+          </div>
+          <h3>Reporta</h3>
+          <p>Toma una foto, geolocaliza la incidencia en el mapa y describe lo que ocurre en segundos.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-top">
+            <span class="step-num">2</span>
+            <mat-icon class="step-icon">autorenew</mat-icon>
+          </div>
+          <h3>Seguimiento</h3>
+          <p>Monitorea en tiempo real el estado de atención de tu reporte por las cuadrillas de la comuna.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-card-top">
+            <span class="step-num">3</span>
+            <mat-icon class="step-icon">verified_user</mat-icon>
+          </div>
+          <h3>Resolución</h3>
+          <p>Recibe una notificación con la evidencia del problema resuelto y califica el trabajo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FRANJA AZUL DE MÉTRICAS -->
+  <section class="metrics-banner">
+    <div class="metrics-container">
+      <div class="metric-item">
+        <mat-icon class="metric-icon">done_all</mat-icon>
+        <div class="metric-text">
+          <span class="metric-value">12,847</span>
+          <span class="metric-label">Reportes Resueltos</span>
+        </div>
+      </div>
+
+      <div class="metric-item">
+        <mat-icon class="metric-icon">star_half</mat-icon>
+        <div class="metric-text">
+          <span class="metric-value">4.2</span>
+          <span class="metric-label">Calificación Promedio</span>
+        </div>
+      </div>
+
+      <div class="metric-item">
+        <mat-icon class="metric-icon">schedule</mat-icon>
+        <div class="metric-text">
+          <span class="metric-value">&lt; 48h</span>
+          <span class="metric-label">Tiempo Promedio</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER OSCURO -->
+  <footer class="landing-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h4>CIVIX · Gestión Municipal</h4>
+        <p>
+          Trabajando todos los días para ofrecer mejores servicios y una respuesta más ágil ante las
+          necesidades de nuestros vecinos.
+        </p>
+      </div>
+
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h5>Servicios</h5>
+          <a routerLink="/login">Reportar Incidencia</a>
+          <a routerLink="/login">Seguimiento de Ticket</a>
+          <a routerLink="/login">Mapa de Distrito</a>
+        </div>
+
+        <div class="footer-col">
+          <h5>Gobierno</h5>
+          <a routerLink="/home">Trámites</a>
+          <a routerLink="/home">Transparencia</a>
+          <a routerLink="/home">Normativas</a>
+        </div>
+
+        <div class="footer-col">
+          <h5>Ayuda</h5>
+          <a routerLink="/home">Preguntas Frecuentes</a>
+          <a routerLink="/home">Guía del Portal</a>
+          <a routerLink="/home">Soporte Digital</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 CIVIX Municipalidad. Todos los derechos reservados.</span>
+    </div>
+  </footer>
+</div>

@@ -1,27 +1,125 @@
-<p>incidencia-lista works!</p>
-<div class="mat-elevation-z8">
-  <table mat-table [dataSource]="dataSource" matSort>
-    <ng-container matColumnDef="idProveedor">
-      <th mat-header-cell *matHeaderCellDef> ID </th>
-      <td mat-cell *matCellDef="let element"> {{element.idIncidencia}} </td>
-    </ng-container>
-    <ng-container matColumnDef="titulo">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header> Título </th>
-      <td mat-cell *matCellDef="let element"> {{element.titulo}} </td>
-    </ng-container>
-    <ng-container matColumnDef="descripcion">
-      <th mat-header-cell *matHeaderCellDef> descripcion </th>
-      <td mat-cell *matCellDef="let element"> {{element.descripcion}} </td>
-    </ng-container>
-    <ng-container matColumnDef="prioridad">
-      <th mat-header-cell *matHeaderCellDef> prioridad </th>
-      <td mat-cell *matCellDef="let element"> {{element.prioridad}} </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
-  <mat-paginator [pageSizeOptions]="[5, 10, 20]"
-                 showFirstLastButtons=""
-                 aria-label="Select page of periodic elements">
-  </mat-paginator>
+<div class="tracking-page">
+  <div class="tracking-container">
+    <div class="page-header">
+      <span class="eyebrow">
+        {{ esAdmin() ? 'BANDEJA MUNICIPAL DE GESTIÓN' : 'BUZÓN DE INCIDENCIAS' }}
+      </span>
+      <h1 class="page-title">
+        {{ esAdmin() ? 'Gestión y Seguimiento de Reportes' : 'Mis Reportes y Seguimiento' }}
+      </h1>
+    </div>
+
+    <!-- Barra de búsqueda y pastillas de filtro -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          placeholder="Buscar por Ticket ID o calle..."
+          [value]="busqueda()"
+          (input)="busqueda.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="filter-pills">
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="filtroEstado() === 'TODOS'"
+          (click)="filtroEstado.set('TODOS')"
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="filtroEstado() === 'PENDIENTE'"
+          (click)="filtroEstado.set('PENDIENTE')"
+        >
+          Recibido
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="filtroEstado() === 'EN_PROCESO'"
+          (click)="filtroEstado.set('EN_PROCESO')"
+        >
+          En Proceso
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="filtroEstado() === 'ATENDIDO'"
+          (click)="filtroEstado.set('ATENDIDO')"
+        >
+          Resuelto
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="filtroEstado() === 'RECHAZADO'"
+          (click)="filtroEstado.set('RECHAZADO')"
+        >
+          Rechazado
+        </button>
+      </div>
+    </div>
+
+    <!-- Listado de tarjetas de incidencias -->
+    @if (cargando()) {
+      <div class="empty-state">Cargando reportes...</div>
+    } @else if (incidenciasFiltradas().length === 0) {
+      <div class="empty-state">No se encontraron incidencias con los filtros seleccionados.</div>
+    } @else {
+      <div class="tickets-list">
+        @for (inc of incidenciasFiltradas(); track inc.idIncidencia) {
+          <div class="ticket-card" (click)="verDetalle(inc)">
+            <!-- Columna izquierda: Ticket ID y Categoría -->
+            <div class="ticket-col-left">
+              <span class="ticket-id">{{ inc.codigoIncidencia || 'INC-' + inc.idIncidencia }}</span>
+              <span class="ticket-category">{{ inc.categoria?.nombre || 'Incidencia' }}</span>
+            </div>
+
+            <!-- Columna central: Título y fecha -->
+            <div class="ticket-col-center">
+              <h3 class="ticket-title">{{ inc.titulo }}</h3>
+              <span class="ticket-date">
+                Registrado: {{ inc.fechaRegistro | date: 'dd/MM/yyyy' }}
+                @if (inc.direccionReferencia) {
+                  · {{ inc.direccionReferencia }}
+                }
+              </span>
+            </div>
+
+            <!-- Columna derecha: Barra de progreso, estado y flecha -->
+            <div class="ticket-col-right">
+              <div class="progress-block">
+                <div class="progress-labels">
+                  <span>Progreso de atención</span>
+                  <span class="progress-pct" [ngClass]="'pct-' + inc.estadoAtencion.toLowerCase()">
+                    {{ obtenerProgreso(inc.estadoAtencion) }}%
+                  </span>
+                </div>
+                <div class="progress-track">
+                  <div
+                    class="progress-fill"
+                    [ngClass]="'fill-' + inc.estadoAtencion.toLowerCase()"
+                    [style.width.%]="obtenerProgreso(inc.estadoAtencion)"
+                  ></div>
+                </div>
+              </div>
+
+              <span class="status-badge" [ngClass]="'badge-' + inc.estadoAtencion.toLowerCase()">
+                {{ obtenerEtiquetaEstado(inc.estadoAtencion) }}
+              </span>
+
+              <button type="button" class="expand-btn" title="Ver detalles del ticket">
+                <mat-icon>{{ esAdmin() ? 'edit_note' : 'arrow_forward' }}</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
 </div>
