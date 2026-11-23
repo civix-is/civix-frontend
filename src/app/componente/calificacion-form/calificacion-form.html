@@ -1,1 +1,62 @@
-<p>calificacion-form works!</p>
+@if (cargando()) {
+  <p role="status">Cargando calificación…</p>
+} @else if (errorConsulta()) {
+  <p class="rating-error" role="alert">No se pudo consultar la calificación.</p>
+} @else if (calificacion(); as guardada) {
+  <div class="rating-result" role="status">
+    <span class="rating-stars" aria-hidden="true">
+      @for (estrella of estrellas; track estrella) {
+        <span [class.active]="estrella <= guardada.puntuacion">
+          {{ estrella <= guardada.puntuacion ? '★' : '☆' }}
+        </span>
+      }
+    </span>
+    <span>{{ guardada.puntuacion }} de 5 estrellas</span>
+  </div>
+
+  @if (guardada.comentario?.trim()) {
+    <p class="rating-comment">{{ guardada.comentario }}</p>
+  }
+} @else if (editable()) {
+  <form (submit)="$event.preventDefault(); guardar()">
+    <fieldset class="rating-form" [disabled]="guardando()">
+      <legend>Califica la atención municipal</legend>
+
+      <div class="rating-stars">
+        @for (estrella of estrellas; track estrella) {
+          <button
+            type="button"
+            class="star-btn"
+            [class.active]="estrella <= puntuacion()"
+            [attr.aria-label]="estrella + ' de 5 estrellas'"
+            [attr.aria-pressed]="estrella === puntuacion()"
+            (click)="puntuacion.set(estrella)"
+          >
+            {{ estrella <= puntuacion() ? '★' : '☆' }}
+          </button>
+        }
+      </div>
+
+      <label>
+        Comentario (opcional)
+        <textarea
+          #campo
+          rows="2"
+          maxlength="255"
+          [value]="comentario()"
+          (input)="comentario.set(campo.value)"
+        ></textarea>
+      </label>
+
+      <button type="submit" class="rating-submit" [disabled]="!puntuacion()">
+        {{ guardando() ? 'Guardando…' : 'Enviar' }}
+      </button>
+    </fieldset>
+  </form>
+
+  @if (errorEnvio()) {
+    <p class="rating-error" role="alert">{{ errorEnvio() }}</p>
+  }
+} @else {
+  <p>Todavía no hay una calificación registrada.</p>
+}

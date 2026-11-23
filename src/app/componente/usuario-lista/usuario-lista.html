@@ -1,31 +1,90 @@
+<div class="tracking-page">
+  <div class="tracking-container">
+    <header class="page-header">
+      <h1 class="page-title">Lista de usuarios</h1>
+    </header>
 
-<div class="mat-elevation-z8">
-  <table mat-table [dataSource]="dataSource" matSort>
-    <!-- Position Column -->
-    <ng-container matColumnDef="idUsuario">
-      <th mat-header-cell *matHeaderCellDef> ID </th>
-      <td mat-cell *matCellDef="let element"> {{element.idUsuario}} </td>
-    </ng-container>
-    <!-- Name Column -->
-    <ng-container matColumnDef="nombre">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header> Nombre </th>
-      <td mat-cell *matCellDef="let element"> {{element.nombre}} </td>
-    </ng-container>
-    <!-- Fecha Column -->
-    <ng-container matColumnDef="correo">
-      <th mat-header-cell *matHeaderCellDef> Correo </th>
-      <td mat-cell *matCellDef="let element"> {{element.correo}} </td>
-    </ng-container>
-    <!-- Symbol Column -->
-    <ng-container matColumnDef="email">
-      <th mat-header-cell *matHeaderCellDef> Email </th>
-      <td mat-cell *matCellDef="let element"> {{element.email}} </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
-  <mat-paginator [pageSizeOptions]="[5, 10, 20]"
-                 showFirstLastButtons=""
-                 aria-label="Select page of periodic elements">
-  </mat-paginator>
+    <div class="filter-bar">
+      <label for="buscar-usuarios" class="search-label">
+        Buscar por ID, nombre, correo, teléfono o DNI
+      </label>
+
+      <div class="search-box">
+        <span class="search-icon" aria-hidden="true"></span>
+        <input
+          #buscador
+          id="buscar-usuarios"
+          type="search"
+          placeholder="Buscar usuarios"
+          (input)="buscar(buscador.value)"
+        />
+      </div>
+    </div>
+
+    @if (mensajeError()) {
+      <p class="mensaje-error" role="alert">{{ mensajeError() }}</p>
+    }
+
+    @if (confirmacion()) {
+      <p role="status">{{ confirmacion() }}</p>
+    }
+
+    @if (cargando()) {
+      <p class="empty-state" role="status">Cargando usuarios…</p>
+    } @else if (errorCarga()) {
+      <p class="empty-state" role="alert">No se pudo cargar la lista de usuarios.</p>
+    } @else if (usuariosFiltrados().length === 0) {
+      <p class="empty-state" role="status">No se encontraron usuarios.</p>
+    } @else {
+      <ul class="usuarios-list">
+        @for (usuario of usuariosPagina(); track usuario.idUsuario) {
+          <li class="usuario-card">
+            <div class="usuario-campo">
+              <span class="campo-label">Nombre</span>
+              <strong class="usuario-nombre">{{ nombreCompleto(usuario) || '—' }}</strong>
+              <span class="usuario-id">ID {{ usuario.idUsuario }}</span>
+              <span class="usuario-id">Rol: {{ usuario.rol?.nombreRol || 'Sin rol asignado' }}</span>
+            </div>
+
+            <div class="usuario-campo">
+              <span class="campo-label">Correo</span>
+              <span>{{ (usuario.correo || '').trim() || '—' }}</span>
+            </div>
+
+            <div class="usuario-campo">
+              <span class="campo-label">Teléfono</span>
+              <span>{{ (usuario.telefono || '').trim() || '—' }}</span>
+            </div>
+
+            <div class="usuario-campo">
+              <span class="campo-label">DNI</span>
+              <span>{{ (usuario.dni || '').trim() || '—' }}</span>
+            </div>
+
+            <div class="usuario-acciones">
+              <button
+                type="button"
+                class="eliminar"
+                [disabled]="eliminando()"
+                [attr.aria-label]="'Eliminar usuario ' + usuario.idUsuario"
+                (click)="eliminar(usuario)"
+              >
+                Eliminar
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+
+      <mat-paginator
+        aria-label="Paginación de usuarios"
+        [length]="usuariosFiltrados().length"
+        [pageIndex]="indicePagina()"
+        [pageSize]="tamanoPagina()"
+        [pageSizeOptions]="[5, 10, 20]"
+        [showFirstLastButtons]="true"
+        (page)="cambiarPagina($event)"
+      />
+    }
+  </div>
 </div>

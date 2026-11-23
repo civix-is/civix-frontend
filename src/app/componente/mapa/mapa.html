@@ -118,25 +118,11 @@
           <p class="card-desc">{{ sel.descripcion }}</p>
 
           <!-- Pop-up inline para Calificar Reporte -->
-          @if (mostrarCalificacion()) {
-            <div class="rating-bar">
-              <span>Califica la atención municipal:</span>
-              <div class="stars-row">
-                @for (star of [1, 2, 3, 4, 5]; track star) {
-                  <button
-                    type="button"
-                    class="star-btn"
-                    [class.active]="star <= estrellasSeleccionadas()"
-                    (click)="estrellasSeleccionadas.set(star)"
-                  >
-                    ★
-                  </button>
-                }
-              </div>
-              <button type="button" class="btn-confirm-rate" (click)="guardarCalificacion()">
-                {{ calificacionGuardada() ? '¡Gracias!' : 'Enviar' }}
-              </button>
-            </div>
+          @if (mostrarCalificacion() && puedeCalificar(sel)) {
+            <app-calificacion-form
+              [idIncidencia]="sel.idIncidencia"
+              [editable]="true"
+            />
           }
 
           <!-- Barra de acciones inferior -->
@@ -163,14 +149,17 @@
                 Apoyo Vecinal
               </button>
 
-              <button
-                type="button"
-                class="btn-rate-report"
-                (click)="mostrarCalificacion.set(!mostrarCalificacion())"
-              >
-                <mat-icon>star</mat-icon>
-                Calificar Reporte
-              </button>
+              @if (puedeCalificar(sel)) {
+                <button
+                  type="button"
+                  class="btn-rate-report"
+                  [attr.aria-expanded]="mostrarCalificacion()"
+                  (click)="mostrarCalificacion.set(!mostrarCalificacion())"
+                >
+                  <mat-icon>star</mat-icon>
+                  Calificar Reporte
+                </button>
+              }
             </div>
           </div>
         </div>

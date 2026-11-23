@@ -1,0 +1,72 @@
+.rating-result,
+.rating-stars {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rating-stars {
+  color: #64748b;
+  font-size: 22px;
+}
+
+.rating-stars .active {
+  color: #a85800;
+}
+
+.star-btn {
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rating-form {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.rating-form label {
+  display: grid;
+  gap: 4px;
+}
+
+.rating-form textarea {
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font: inherit;
+  resize: vertical;
+}
+
+.rating-submit {
+  justify-self: start;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: #0d5cab;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.rating-comment {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.rating-error {
+  color: #b91c1c;
+}

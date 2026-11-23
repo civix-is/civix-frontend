@@ -21,11 +21,13 @@ import { CategoriaService } from '../../services/categoria-service';
 import { EvidenciaService } from '../../services/evidencia-service';
 import { Incidencia } from '../../model/incidencia';
 import { Categoria } from '../../model/categoria';
+import { AuthService } from '../../services/auth-service';
+import { CalificacionForm } from '../calificacion-form/calificacion-form';
 
 @Component({
   selector: 'app-mapa',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, MatIconModule, MatButtonModule],
+  imports: [CommonModule, DatePipe, FormsModule, MatIconModule, MatButtonModule, CalificacionForm],
   templateUrl: './mapa.html',
   styleUrl: './mapa.css',
 })
@@ -42,6 +44,7 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private readonly STORAGE_APOYOS = 'civix_apoyos_vecinales';
   private readonly STORAGE_CALIFICACIONES = 'civix_calificaciones_mapa';
+  private readonly authService = inject(AuthService);
 
   categorias = signal<Categoria[]>([]);
   categoriasSeleccionadas = signal<Set<number>>(new Set());
@@ -73,7 +76,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       error: () => this.cargarIncidencias(),
     });
   }
-
+  puedeCalificar(incidencia: Incidencia): boolean {
+    return incidencia.estadoAtencion === 'ATENDIDO' && this.authService.getRol() === 'CIUDADANO';
+  }
   private cargarPersistenciaLocal(): void {
     const apoyosRaw = localStorage.getItem(this.STORAGE_APOYOS);
     if (apoyosRaw) {
@@ -257,24 +262,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     };
     this.apoyosVecinales.set(mapaApoyos);
     localStorage.setItem(this.STORAGE_APOYOS, JSON.stringify(mapaApoyos));
-  }
-
-  guardarCalificacion(): void {
-    const inc = this.incidenciaSeleccionada();
-    if (!inc) return;
-
-    const actualizadas = {
-      ...this.calificacionesGuardadas(),
-      [inc.idIncidencia]: this.estrellasSeleccionadas(),
-    };
-
-    this.calificacionesGuardadas.set(actualizadas);
-    localStorage.setItem(this.STORAGE_CALIFICACIONES, JSON.stringify(actualizadas));
-
-    this.calificacionGuardada.set(true);
-    setTimeout(() => {
-      this.mostrarCalificacion.set(false);
-    }, 1200);
   }
 
   obtenerEtiquetaEstado(estado: string): string {

@@ -24,8 +24,8 @@ export class UsuarioService {
     const params = new HttpParams().set('correo', correo);
     return this.httpClient.get(environment.apiUrl + '/usuario/buscar-por-correo', { params });
   }
-  eliminar(id: number) {
-    const params = new HttpParams().set('id', id);
-    return this.httpClient.delete(environment.apiUrl + '/usuario/eliminar', {params});
+  eliminar(id: number): Observable<void> {
+    const params = new HttpParams().set('id_usuario', id);
+    return this.httpClient.delete<void>(environment.apiUrl + '/usuario/eliminar', { params },);
   }
 }
