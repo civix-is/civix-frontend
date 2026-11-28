@@ -81,11 +81,6 @@
             </div>
           </div>
 
-          <section class="info-card">
-            <h2 class="card-heading">Calificación</h2>
-            <app-calificacion-form [idIncidencia]="inc.idIncidencia" [editable]="inc.estadoAtencion === 'ATENDIDO' && authService.getRol() === 'CIUDADANO'" />
-          </section>
-
           <!-- Tarjeta de Geolocalización -->
           <div class="info-card">
             <h2 class="card-heading">Geolocalización</h2>

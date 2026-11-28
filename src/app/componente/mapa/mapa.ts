@@ -24,12 +24,10 @@ import { CalificacionService } from '../../services/calificacion-service';
 import { Incidencia } from '../../model/incidencia';
 import { Categoria } from '../../model/categoria';
 import { AuthService } from '../../services/auth-service';
-import { CalificacionForm } from '../calificacion-form/calificacion-form';
-
 @Component({
   selector: 'app-mapa',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, MatIconModule, MatButtonModule, CalificacionForm],
+  imports: [CommonModule, DatePipe, FormsModule, MatIconModule, MatButtonModule],
   templateUrl: './mapa.html',
   styleUrl: './mapa.css',
 })
@@ -309,7 +307,7 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       .registrar({
         idIncidencia: inc.idIncidencia,
         puntuacion: this.estrellasSeleccionadas(),
-        comentario: this.comentarioCalificacion().trim() || undefined,
+        comentario: this.comentarioCalificacion().trim() || null,
       })
       .subscribe({
         next: () => {

@@ -21,12 +21,7 @@ export const routes: Routes = [
     loadComponent: () => import('./componente/registro/registro').then((m) => m.Registro),
     canActivate: [publicGuard],
   },
-  {
-    path: 'acerca',
-    loadComponent: () =>
-      import('./componente/acerca-component/acerca-component').then((m) => m.AcercaComponent),
-    canActivate: [publicGuard],
-  },
+
 
   {
     path: 'incidencia-crear',
