@@ -17,15 +17,17 @@ export class UsuarioService {
     return this.httpClient.get<Usuario[]>(environment.apiUrl + '/usuario/listar');
   }
   buscarporId(id: number) {
-    const params = new HttpParams().set('id', id);
-    return this.httpClient.get(environment.apiUrl + '/usuario/buscar-por-id', { params });
+    const params = new HttpParams().set('id_usuario', id);
+    return this.httpClient.get<Usuario>(environment.apiUrl + '/usuario/buscar-por-id', { params });
   }
   buscarporCorreo(correo: string) {
     const params = new HttpParams().set('correo', correo);
-    return this.httpClient.get(environment.apiUrl + '/usuario/buscar-por-correo', { params });
+    return this.httpClient.get<Usuario>(environment.apiUrl + '/usuario/buscar-por-correo', {
+      params,
+    });
   }
   eliminar(id: number) {
-    const params = new HttpParams().set('id', id);
-    return this.httpClient.delete(environment.apiUrl + '/usuario/eliminar', {params});
+    const params = new HttpParams().set('id_usuario', id);
+    return this.httpClient.delete(environment.apiUrl + '/usuario/eliminar', { params });
   }
 }

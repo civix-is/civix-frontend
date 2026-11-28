@@ -1,1 +1,120 @@
-<p>categoria-lista works!</p>
+<div class="cat-page">
+  <div class="cat-container">
+    <div class="page-header">
+      <div>
+        <span class="eyebrow">ADMINISTRACIÓN MUNICIPAL</span>
+        <h1 class="page-title">Catálogo de Categorías</h1>
+      </div>
+      <button type="button" class="btn-primary" (click)="abrirCrear()">
+        <mat-icon>add</mat-icon>
+        Nueva Categoría
+      </button>
+    </div>
+
+    <div class="filter-bar">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          placeholder="Buscar categoría por nombre o descripción..."
+          [value]="busqueda()"
+          (input)="busqueda.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <div class="empty-state">Cargando categorías...</div>
+    } @else if (categoriasFiltradas().length === 0) {
+      <div class="empty-state">No hay categorías registradas con ese criterio.</div>
+    } @else {
+      <div class="cards-list">
+        @for (cat of categoriasFiltradas(); track cat.idCategoria) {
+          <div class="item-card">
+            <div class="col-left">
+              <span class="item-id">CAT-{{ cat.idCategoria }}</span>
+              <span class="item-title">{{ cat.nombre }}</span>
+            </div>
+
+            <div class="col-center">
+              <p class="item-desc">{{ cat.descripcion }}</p>
+              <span class="item-meta">SLA estimado: {{ cat.horasEstimadas || 48 }} horas</span>
+            </div>
+
+            <div class="col-right">
+              <span class="status-badge" [class.inactive]="cat.estado === false">
+                {{ cat.estado === false ? 'Inactiva' : 'Activa' }}
+              </span>
+              <button type="button" class="icon-btn" title="Ver detalle" (click)="verDetalle(cat)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button type="button" class="icon-btn" title="Editar" (click)="abrirEditar(cat)">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+@if (modalFormularioAbierto()) {
+  <div class="modal-backdrop" (click)="cerrarFormulario()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <h3>{{ editandoId() ? 'Editar Categoría' : 'Registrar Nueva Categoría' }}</h3>
+      <form [formGroup]="form" (ngSubmit)="guardarCategoria()" class="modal-form">
+        <label>Nombre</label>
+        <input type="text" formControlName="nombre" placeholder="Ej. Pistas y Vías" />
+
+        <label>Descripción</label>
+        <textarea formControlName="descripcion" rows="3" placeholder="Detalle de la categoría..."></textarea>
+
+        <div class="two-cols">
+          <div>
+            <label>Horas SLA</label>
+            <input type="number" formControlName="horasEstimadas" min="1" />
+          </div>
+          <div>
+            <label>Estado</label>
+            <select formControlName="estado">
+              <option [ngValue]="true">Activa</option>
+              <option [ngValue]="false">Inactiva</option>
+            </select>
+          </div>
+        </div>
+
+        @if (errorFormulario()) {
+          <p class="modal-error">{{ errorFormulario() }}</p>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="cerrarFormulario()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (detalleCategoria(); as det) {
+  <div class="modal-backdrop" (click)="detalleCategoria.set(null)">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <h3>Detalle de Categoría #{{ det.idCategoria }}</h3>
+      @if (cargandoDetalle()) {
+        <p>Actualizando detalle...</p>
+      }
+      <div class="detail-rows">
+        <div><strong>Nombre:</strong> {{ det.nombre }}</div>
+        <div><strong>Descripción:</strong> {{ det.descripcion }}</div>
+        <div><strong>Plazo SLA:</strong> {{ det.horasEstimadas || 48 }} horas</div>
+        <div><strong>Estado:</strong> {{ det.estado === false ? 'Inactiva' : 'Activa' }}</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" (click)="detalleCategoria.set(null)">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

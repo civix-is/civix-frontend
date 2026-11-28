@@ -2,7 +2,13 @@
   <!-- PANEL LATERAL IZQUIERDO: FILTROS DEL MAPA -->
   <aside class="filters-sidebar">
     <div class="sidebar-header">
-      <h2>Filtros del Mapa</h2>
+      <div class="sidebar-title-row">
+        <h2>Filtros del Mapa</h2>
+        <span class="live-badge" [class.online]="realtime.conectadoTiempoReal()">
+          <span class="dot"></span>
+          {{ realtime.conectadoTiempoReal() ? 'En vivo' : 'Reconectando' }}
+        </span>
+      </div>
       <p>Explora las incidencias reportadas en tu comunidad.</p>
     </div>
 
@@ -127,16 +133,39 @@
                     type="button"
                     class="star-btn"
                     [class.active]="star <= estrellasSeleccionadas()"
+                    [disabled]="calificacionGuardada() || enviandoCalificacion()"
                     (click)="estrellasSeleccionadas.set(star)"
                   >
                     ★
                   </button>
                 }
               </div>
-              <button type="button" class="btn-confirm-rate" (click)="guardarCalificacion()">
-                {{ calificacionGuardada() ? '¡Gracias!' : 'Enviar' }}
+              <input
+                type="text"
+                class="rating-comment-input"
+                placeholder="Comentario opcional..."
+                [value]="comentarioCalificacion()"
+                [disabled]="calificacionGuardada() || enviandoCalificacion()"
+                (input)="comentarioCalificacion.set($any($event.target).value)"
+              />
+              <button
+                type="button"
+                class="btn-confirm-rate"
+                [disabled]="calificacionGuardada() || enviandoCalificacion()"
+                (click)="guardarCalificacion()"
+              >
+                {{
+                  calificacionGuardada()
+                    ? '¡Calificado!'
+                    : enviandoCalificacion()
+                      ? 'Enviando...'
+                      : 'Enviar'
+                }}
               </button>
             </div>
+            @if (errorCalificacion()) {
+              <p class="rating-error">{{ errorCalificacion() }}</p>
+            }
           }
 
           <!-- Barra de acciones inferior -->

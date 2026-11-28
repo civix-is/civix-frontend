@@ -19,6 +19,14 @@ export class EvidenciaService {
     return this.httpClient.post(`${this.url}/evidencia/registrar`, evidencia);
   }
 
+  subirArchivo(archivo: File, idIncidencia: number, fase = 'Inicial'): Observable<any> {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+    formData.append('id_incidencia', String(idIncidencia));
+    formData.append('fase', fase);
+    return this.httpClient.post(`${this.url}/evidencia/subir`, formData);
+  }
+
   listar(): Observable<any[]> {
     return this.httpClient.get<any[]>(`${this.url}/evidencia/listar`);
   }

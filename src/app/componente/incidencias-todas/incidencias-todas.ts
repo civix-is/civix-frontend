@@ -1,11 +1,22 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, OnInit, ViewChild } from '@angular/core';
 import { Incidencia } from '../../model/incidencia';
-import { MatCell, MatCellDef, MatColumnDef, MatHeaderCell, MatHeaderCellDef, MatHeaderRow, MatHeaderRowDef, MatRow,
-  MatRowDef, MatTable, MatTableDataSource } from '@angular/material/table';
+import {
+  MatCell,
+  MatCellDef,
+  MatColumnDef,
+  MatHeaderCell,
+  MatHeaderCellDef,
+  MatHeaderRow,
+  MatHeaderRowDef,
+  MatRow,
+  MatRowDef,
+  MatTable,
+  MatTableDataSource,
+} from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
-import { IncidenciaService } from '../../services/incidencia-service';
 import { Router } from '@angular/router';
+import { IncidenciaRealtimeService } from '../../services/incidencia-realtime.service';
 
 @Component({
   imports: [
@@ -26,29 +37,37 @@ import { Router } from '@angular/router';
   styleUrl: './incidencias-todas.css',
   templateUrl: './incidencias-todas.html',
 })
-export class IncidenciasTodas {
-  lista: Incidencia[];
-  displayedColumns: string[] = ['titulo', 'descripcion', 'prioridad'];
+export class IncidenciasTodas implements OnInit, AfterViewInit {
+  displayedColumns: string[] = [
+    'codigoIncidencia',
+    'titulo',
+    'descripcion',
+    'prioridad',
+    'estadoAtencion',
+  ];
   dataSource: MatTableDataSource<Incidencia> = new MatTableDataSource<Incidencia>();
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
-  incidenciaService: IncidenciaService = inject(IncidenciaService);
-  route: Router = inject(Router);
-  constructor() {}
+  realtime = inject(IncidenciaRealtimeService);
+  route = inject(Router);
+
+  constructor() {
+    effect(() => {
+      this.dataSource.data = [...this.realtime.incidencias()];
+    });
+  }
+
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
   }
+
   ngOnInit() {
-    console.log('Component ngOnInit llamando al API Get');
-    this.cargarLista();
+    this.realtime.asegurarConexion();
+    this.realtime.cargarTodas();
   }
-  cargarLista() {
-    this.incidenciaService.listar().subscribe({
-      next: (data) => {
-        this.dataSource.data = data;
-        this.dataSource._updateChangeSubscription();
-      },
-    });
+
+  verDetalle(incidencia: Incidencia): void {
+    this.route.navigate(['/incidencia-detalle', incidencia.idIncidencia]);
   }
 }

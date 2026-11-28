@@ -1,25 +1,28 @@
-import { inject, Service } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Categoria } from '../model/categoria';
 
-@Service()
+@Injectable({ providedIn: 'root' })
 export class CategoriaService {
   private url = environment.apiUrl;
-  private httpClient: HttpClient = inject(HttpClient);
-  constructor() {}
-  registrar(categoria:CategoriaService){
-    return this.httpClient.post<CategoriaService>(environment.apiUrl+"/categoria/registrar",categoria);
+  private httpClient = inject(HttpClient);
+
+  registrar(categoria: Partial<Categoria>): Observable<Categoria> {
+    return this.httpClient.post<Categoria>(`${this.url}/categoria/registrar`, categoria);
   }
+
   listar(): Observable<Categoria[]> {
-    return this.httpClient.get<Categoria[]>(environment.apiUrl + "/categoria/listar");
+    return this.httpClient.get<Categoria[]>(`${this.url}/categoria/listar`);
   }
-  buscarPorId(id:number):Observable<CategoriaService[]>{
-    const params = new HttpParams().set('id', id);
-    return this.httpClient.get<CategoriaService[]>(environment.apiUrl+'/categoria/buscar-por-id',{params});
+
+  buscarPorId(id: number): Observable<Categoria> {
+    const params = new HttpParams().set('id_categoria', id);
+    return this.httpClient.get<Categoria>(`${this.url}/categoria/buscar-por-id`, { params });
   }
-  actualizar(categoria:CategoriaService){
-    return this.httpClient.put<CategoriaService>(environment.apiUrl+"/categoria/actualizar",categoria);
+
+  actualizar(categoria: Partial<Categoria>): Observable<Categoria> {
+    return this.httpClient.put<Categoria>(`${this.url}/categoria/actualizar`, categoria);
   }
 }

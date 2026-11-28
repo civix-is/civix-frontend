@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   Component,
+  effect,
   ElementRef,
   inject,
   OnDestroy,
@@ -16,9 +17,10 @@ import * as L from 'leaflet';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
-import { IncidenciaService } from '../../services/incidencia-service';
+import { IncidenciaRealtimeService } from '../../services/incidencia-realtime.service';
 import { CategoriaService } from '../../services/categoria-service';
 import { EvidenciaService } from '../../services/evidencia-service';
+import { CalificacionService } from '../../services/calificacion-service';
 import { Incidencia } from '../../model/incidencia';
 import { Categoria } from '../../model/categoria';
 
@@ -32,9 +34,10 @@ import { Categoria } from '../../model/categoria';
 export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mapaComunitario') mapaElemento!: ElementRef<HTMLDivElement>;
 
-  private incidenciaService = inject(IncidenciaService);
+  readonly realtime = inject(IncidenciaRealtimeService);
   private categoriaService = inject(CategoriaService);
   private evidenciaService = inject(EvidenciaService);
+  private calificacionService = inject(CalificacionService);
   private router = inject(Router);
 
   private mapa?: L.Map;
@@ -58,19 +61,50 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   mostrarCalificacion = signal<boolean>(false);
   estrellasSeleccionadas = signal<number>(5);
+  comentarioCalificacion = signal<string>('');
+  enviandoCalificacion = signal<boolean>(false);
   calificacionGuardada = signal<boolean>(false);
+  errorCalificacion = signal<string>('');
+
+  constructor() {
+    effect(() => {
+      const data = this.realtime.incidencias();
+      this.todasIncidencias.set(data);
+
+      if (data.length > 0) {
+        const apoyosActuales = { ...this.apoyosVecinales() };
+        let huboNuevos = false;
+        data.forEach((inc) => {
+          if (!apoyosActuales[inc.idIncidencia]) {
+            apoyosActuales[inc.idIncidencia] = {
+              count: (inc.idIncidencia % 19) + 6,
+              apoyado: false,
+            };
+            huboNuevos = true;
+          }
+        });
+        if (huboNuevos) {
+          this.apoyosVecinales.set(apoyosActuales);
+          localStorage.setItem(this.STORAGE_APOYOS, JSON.stringify(apoyosActuales));
+        }
+      }
+
+      this.aplicarFiltros();
+    });
+  }
 
   ngOnInit(): void {
     this.cargarPersistenciaLocal();
+    this.realtime.asegurarConexion();
 
     this.categoriaService.listar().subscribe({
       next: (cats) => {
         this.categorias.set(cats);
         const ids = new Set(cats.map((c) => c.idCategoria));
         this.categoriasSeleccionadas.set(ids);
-        this.cargarIncidencias();
+        this.realtime.cargarTodas();
       },
-      error: () => this.cargarIncidencias(),
+      error: () => this.realtime.cargarTodas(),
     });
   }
 
@@ -102,28 +136,7 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     }).addTo(this.mapa);
 
     this.capaMarcadores.addTo(this.mapa);
-  }
-
-  private cargarIncidencias(): void {
-    this.incidenciaService.listar().subscribe({
-      next: (data) => {
-        this.todasIncidencias.set(data);
-        const apoyosActuales = { ...this.apoyosVecinales() };
-
-        data.forEach((inc) => {
-          if (!apoyosActuales[inc.idIncidencia]) {
-            apoyosActuales[inc.idIncidencia] = {
-              count: (inc.idIncidencia % 19) + 6,
-              apoyado: false,
-            };
-          }
-        });
-
-        this.apoyosVecinales.set(apoyosActuales);
-        localStorage.setItem(this.STORAGE_APOYOS, JSON.stringify(apoyosActuales));
-        this.aplicarFiltros();
-      },
-    });
+    this.renderizarMarcadores();
   }
 
   toggleCategoria(idCategoria: number, checked: boolean): void {
@@ -156,10 +169,13 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const actual = this.incidenciaSeleccionada();
     if (filtradas.length > 0) {
-      const sigueVisible = actual && filtradas.some((i) => i.idIncidencia === actual.idIncidencia);
-      if (!sigueVisible) {
+      const actualEnLista = actual
+        ? filtradas.find((i) => i.idIncidencia === actual.idIncidencia)
+        : undefined;
+      if (!actualEnLista) {
         this.seleccionarIncidencia(filtradas[0], false);
       } else {
+        this.incidenciaSeleccionada.set(actualEnLista);
         this.renderizarMarcadores();
       }
     } else {
@@ -172,9 +188,10 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.incidenciaSeleccionada.set(inc);
     this.mostrarCalificacion.set(false);
     this.calificacionGuardada.set(false);
+    this.errorCalificacion.set('');
+    this.comentarioCalificacion.set('');
     this.fotoSeleccionada.set(null);
 
-    // Recupera la calificación guardada de esta incidencia si existe
     const previa = this.calificacionesGuardadas()[inc.idIncidencia];
     this.estrellasSeleccionadas.set(previa ?? 5);
 
@@ -185,6 +202,21 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       },
     });
+
+    if (inc.estadoAtencion === 'ATENDIDO') {
+      this.calificacionService.buscarPorIncidencia(inc.idIncidencia).subscribe({
+        next: (cal) => {
+          if (cal?.puntuacion) {
+            this.estrellasSeleccionadas.set(cal.puntuacion);
+            this.comentarioCalificacion.set(cal.comentario || '');
+            this.calificacionGuardada.set(true);
+          }
+        },
+        error: () => {
+          // Sin calificación previa en backend
+        },
+      });
+    }
 
     this.renderizarMarcadores();
 
@@ -211,7 +243,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
             ? 'dot-amber'
             : 'dot-red';
 
-      const textoPin = esSeleccionada ? 'Seleccionado' : `${inc.categoria?.nombre || inc.titulo}`;
+      const textoPin = this.escaparHtml(
+        esSeleccionada ? 'Seleccionado' : `${inc.categoria?.nombre || inc.titulo}`,
+      );
 
       const icono = L.divIcon({
         className: 'map-pill-wrapper',
@@ -261,20 +295,40 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   guardarCalificacion(): void {
     const inc = this.incidenciaSeleccionada();
-    if (!inc) return;
+    if (!inc || this.enviandoCalificacion()) return;
 
-    const actualizadas = {
-      ...this.calificacionesGuardadas(),
-      [inc.idIncidencia]: this.estrellasSeleccionadas(),
-    };
+    this.errorCalificacion.set('');
+    this.enviandoCalificacion.set(true);
 
-    this.calificacionesGuardadas.set(actualizadas);
-    localStorage.setItem(this.STORAGE_CALIFICACIONES, JSON.stringify(actualizadas));
+    this.calificacionService
+      .registrar({
+        idIncidencia: inc.idIncidencia,
+        puntuacion: this.estrellasSeleccionadas(),
+        comentario: this.comentarioCalificacion().trim() || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.enviandoCalificacion.set(false);
+          const actualizadas = {
+            ...this.calificacionesGuardadas(),
+            [inc.idIncidencia]: this.estrellasSeleccionadas(),
+          };
+          this.calificacionesGuardadas.set(actualizadas);
+          localStorage.setItem(this.STORAGE_CALIFICACIONES, JSON.stringify(actualizadas));
 
-    this.calificacionGuardada.set(true);
-    setTimeout(() => {
-      this.mostrarCalificacion.set(false);
-    }, 1200);
+          this.calificacionGuardada.set(true);
+          setTimeout(() => {
+            this.mostrarCalificacion.set(false);
+          }, 1200);
+        },
+        error: (err) => {
+          this.enviandoCalificacion.set(false);
+          this.errorCalificacion.set(
+            err?.error?.message ||
+              'Solo el autor puede calificar incidencias en estado ATENDIDO (máx. 1 vez).',
+          );
+        },
+      });
   }
 
   obtenerEtiquetaEstado(estado: string): string {
@@ -290,6 +344,15 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       default:
         return estado;
     }
+  }
+
+  private escaparHtml(texto: string): string {
+    return texto
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   ngOnDestroy(): void {

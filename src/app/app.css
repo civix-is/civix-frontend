@@ -96,6 +96,14 @@
   gap: 12px;
 }
 
+.profile-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .user-name {
   font-size: 13px;
   font-weight: 700;

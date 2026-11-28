@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
   OnDestroy,
@@ -9,6 +10,7 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -21,6 +23,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
 import { IncidenciaService } from '../../services/incidencia-service';
+import { IncidenciaRealtimeService } from '../../services/incidencia-realtime.service';
 import { HistorialIncidenciaService } from '../../services/historial-incidencia-service';
 import { EvidenciaService } from '../../services/evidencia-service';
 import { AuthService } from '../../services/auth-service';
@@ -48,7 +51,9 @@ export class IncidenciaDetalle implements OnInit, AfterViewInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
   private incidenciaService = inject(IncidenciaService);
+  private realtime = inject(IncidenciaRealtimeService);
   private historialService = inject(HistorialIncidenciaService);
   private evidenciaService = inject(EvidenciaService);
   authService = inject(AuthService);
@@ -64,6 +69,8 @@ export class IncidenciaDetalle implements OnInit, AfterViewInit, OnDestroy {
   guardandoAvance = signal<boolean>(false);
   mensajeExito = signal<string>('');
   mensajeError = signal<string>('');
+  confirmandoEliminacion = signal<boolean>(false);
+  eliminando = signal<boolean>(false);
 
   esAdmin = computed(() => this.authService.getRol() === 'ADMINISTRADOR');
 
@@ -95,8 +102,22 @@ export class IncidenciaDetalle implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.idIncidencia = Number(this.route.snapshot.paramMap.get('id'));
+    this.realtime.asegurarConexion();
+
     if (this.idIncidencia) {
       this.cargarTodo();
+
+      this.realtime.eventos$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((evento) => {
+        if (evento.idIncidencia !== this.idIncidencia) return;
+        if (evento.tipo === 'ACTUALIZADA') {
+          if (evento.incidencia) {
+            this.incidencia.set(evento.incidencia);
+          }
+          this.cargarHistorial();
+        } else if (evento.tipo === 'ELIMINADA') {
+          this.router.navigate(['/mis-incidencias']);
+        }
+      });
     }
   }
 
@@ -125,6 +146,14 @@ export class IncidenciaDetalle implements OnInit, AfterViewInit, OnDestroy {
       error: () => this.cargando.set(false),
     });
 
+    this.cargarHistorial();
+
+    this.evidenciaService.buscarPorIncidencia(this.idIncidencia).subscribe({
+      next: (fotos) => this.evidencias.set(fotos),
+    });
+  }
+
+  private cargarHistorial(): void {
     this.historialService.buscarPorIncidencia(this.idIncidencia).subscribe({
       next: (items) => {
         // Orden cronológico ascendente para la línea de tiempo (de más antiguo a más reciente)
@@ -133,10 +162,6 @@ export class IncidenciaDetalle implements OnInit, AfterViewInit, OnDestroy {
         );
         this.historial.set(ordenados);
       },
-    });
-
-    this.evidenciaService.buscarPorIncidencia(this.idIncidencia).subscribe({
-      next: (fotos) => this.evidencias.set(fotos),
     });
   }
 
@@ -251,6 +276,34 @@ export class IncidenciaDetalle implements OnInit, AfterViewInit, OnDestroy {
 
   volver(): void {
     this.router.navigate(['/mis-incidencias']);
+  }
+
+  eliminarEvidencia(idEvidencia: number): void {
+    this.evidenciaService.eliminar(idEvidencia).subscribe({
+      next: () => {
+        this.evidencias.update((lista) => lista.filter((e) => e.idEvidencia !== idEvidencia));
+      },
+      error: (err) => {
+        this.mensajeError.set(err?.error?.message || 'No se pudo eliminar la evidencia.');
+      },
+    });
+  }
+
+  eliminarIncidencia(): void {
+    const inc = this.incidencia();
+    if (!inc || this.eliminando()) return;
+    this.eliminando.set(true);
+    this.incidenciaService.eliminar(inc.idIncidencia).subscribe({
+      next: () => {
+        this.eliminando.set(false);
+        this.router.navigate(['/mis-incidencias']);
+      },
+      error: (err) => {
+        this.eliminando.set(false);
+        this.confirmandoEliminacion.set(false);
+        this.mensajeError.set(err?.error?.message || 'No se pudo eliminar la incidencia.');
+      },
+    });
   }
 
   ngOnDestroy(): void {

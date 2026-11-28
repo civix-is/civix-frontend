@@ -1,31 +1,91 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './componente/home-component/home-component';
-import { AcercaComponent } from './componente/acerca-component/acerca-component';
-import { Registro } from './componente/registro/registro';
-import { UsuarioLista } from './componente/usuario-lista/usuario-lista';
-import { Login } from './componente/login/login';
-import { IncidenciaCrear } from './componente/incidencia-crear/incidencia-crear';
-import { IncidenciaLista } from './componente/incidencia-lista/incidencia-lista';
-import { IncidenciaDetalle } from './componente/incidencia-detalle/incidencia-detalle';
-import { IncidenciasTodas } from './componente/incidencias-todas/incidencias-todas';
-import { MapaComponent } from './componente/mapa/mapa';
 import { authGuard } from './guards/auth.guard';
 import { publicGuard } from './guards/public.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
 
-  { path: 'home', component: HomeComponent, canActivate: [publicGuard] },
-  { path: 'login', component: Login, canActivate: [publicGuard] },
-  { path: 'usuarios-registro', component: Registro, canActivate: [publicGuard] },
-  { path: 'acerca', component: AcercaComponent, canActivate: [publicGuard] },
+  {
+    path: 'home',
+    loadComponent: () =>
+      import('./componente/home-component/home-component').then((m) => m.HomeComponent),
+    canActivate: [publicGuard],
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./componente/login/login').then((m) => m.Login),
+    canActivate: [publicGuard],
+  },
+  {
+    path: 'usuarios-registro',
+    loadComponent: () => import('./componente/registro/registro').then((m) => m.Registro),
+    canActivate: [publicGuard],
+  },
+  {
+    path: 'acerca',
+    loadComponent: () =>
+      import('./componente/acerca-component/acerca-component').then((m) => m.AcercaComponent),
+    canActivate: [publicGuard],
+  },
 
-  { path: 'incidencia-crear', component: IncidenciaCrear, canActivate: [authGuard] },
-  { path: 'mis-incidencias', component: IncidenciaLista, canActivate: [authGuard] },
-  { path: 'mapa', component: MapaComponent, canActivate: [authGuard] },
-  { path: 'incidencia-detalle/:id', component: IncidenciaDetalle, canActivate: [authGuard] },
-  { path: 'usuarios-lista', component: UsuarioLista, canActivate: [authGuard] },
-  { path: 'incidencia-todas', component: IncidenciasTodas, canActivate: [authGuard] },
+  {
+    path: 'incidencia-crear',
+    loadComponent: () =>
+      import('./componente/incidencia-crear/incidencia-crear').then((m) => m.IncidenciaCrear),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'mis-incidencias',
+    loadComponent: () =>
+      import('./componente/incidencia-lista/incidencia-lista').then((m) => m.IncidenciaLista),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'mapa',
+    loadComponent: () => import('./componente/mapa/mapa').then((m) => m.MapaComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'incidencia-detalle/:id',
+    loadComponent: () =>
+      import('./componente/incidencia-detalle/incidencia-detalle').then((m) => m.IncidenciaDetalle),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'usuarios-lista',
+    loadComponent: () =>
+      import('./componente/usuario-lista/usuario-lista').then((m) => m.UsuarioLista),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'categorias',
+    loadComponent: () =>
+      import('./componente/categoria-lista/categoria-lista').then((m) => m.CategoriaLista),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'evidencias',
+    loadComponent: () =>
+      import('./componente/evidencia-subida/evidencia-subida').then((m) => m.EvidenciaSubida),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'calificaciones',
+    loadComponent: () =>
+      import('./componente/calificacion-form/calificacion-form').then((m) => m.CalificacionForm),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'perfil',
+    loadComponent: () => import('./componente/perfil/perfil').then((m) => m.PerfilComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'incidencia-todas',
+    loadComponent: () =>
+      import('./componente/incidencias-todas/incidencias-todas').then((m) => m.IncidenciasTodas),
+    canActivate: [authGuard],
+  },
 
   { path: '**', redirectTo: '/home' },
 ];

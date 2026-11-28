@@ -1,27 +1,38 @@
-<p>incidencias-todas works!</p>
+<div class="live-header">
+  <h2>Reportes Ciudadanos</h2>
+  <span class="live-badge" [class.online]="realtime.conectadoTiempoReal()">
+    <span class="dot"></span>
+    {{ realtime.conectadoTiempoReal() ? 'En tiempo real' : 'Conectando...' }}
+  </span>
+</div>
+
 <div class="mat-elevation-z8">
   <table mat-table [dataSource]="dataSource" matSort>
-    <ng-container matColumnDef="idProveedor">
-      <th mat-header-cell *matHeaderCellDef> ID </th>
-      <td mat-cell *matCellDef="let element"> {{element.idIncidencia}} </td>
+    <ng-container matColumnDef="codigoIncidencia">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Código </th>
+      <td mat-cell *matCellDef="let element"> {{ element.codigoIncidencia || 'INC-' + element.idIncidencia }} </td>
     </ng-container>
     <ng-container matColumnDef="titulo">
       <th mat-header-cell *matHeaderCellDef mat-sort-header> Título </th>
-      <td mat-cell *matCellDef="let element"> {{element.titulo}} </td>
+      <td mat-cell *matCellDef="let element"> {{ element.titulo }} </td>
     </ng-container>
     <ng-container matColumnDef="descripcion">
-      <th mat-header-cell *matHeaderCellDef> descripcion </th>
-      <td mat-cell *matCellDef="let element"> {{element.descripcion}} </td>
+      <th mat-header-cell *matHeaderCellDef> Descripción </th>
+      <td mat-cell *matCellDef="let element"> {{ element.descripcion }} </td>
     </ng-container>
     <ng-container matColumnDef="prioridad">
-      <th mat-header-cell *matHeaderCellDef> prioridad </th>
-      <td mat-cell *matCellDef="let element"> {{element.prioridad}} </td>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Prioridad </th>
+      <td mat-cell *matCellDef="let element"> {{ element.prioridad }} </td>
+    </ng-container>
+    <ng-container matColumnDef="estadoAtencion">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Estado </th>
+      <td mat-cell *matCellDef="let element"> {{ element.estadoAtencion }} </td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row" (click)="verDetalle(row)"></tr>
   </table>
   <mat-paginator [pageSizeOptions]="[5, 10, 20]"
                  showFirstLastButtons=""
-                 aria-label="Select page of periodic elements">
+                 aria-label="Seleccionar página de reportes">
   </mat-paginator>
 </div>

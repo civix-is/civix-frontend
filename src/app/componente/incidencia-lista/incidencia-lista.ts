@@ -1,9 +1,11 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { IncidenciaRealtimeService } from '../../services/incidencia-realtime.service';
 import { IncidenciaService } from '../../services/incidencia-service';
+import { HistorialIncidenciaService } from '../../services/historial-incidencia-service';
 import { AuthService } from '../../services/auth-service';
 import { Incidencia } from '../../model/incidencia';
 
@@ -15,16 +17,38 @@ import { Incidencia } from '../../model/incidencia';
   templateUrl: './incidencia-lista.html',
 })
 export class IncidenciaLista implements OnInit {
+  readonly realtime = inject(IncidenciaRealtimeService);
   private incidenciaService = inject(IncidenciaService);
+  private historialService = inject(HistorialIncidenciaService);
   authService = inject(AuthService);
-  private router = inject(Router);
+  router = inject(Router);
 
   incidencias = signal<Incidencia[]>([]);
   cargando = signal<boolean>(true);
   busqueda = signal<string>('');
   filtroEstado = signal<string>('TODOS');
 
+  vistaActual = signal<'REPORTES' | 'BITACORA'>('REPORTES');
+  bitacoraUsuario = signal<any[]>([]);
+  cargandoBitacora = signal<boolean>(false);
+
+  incidenciaAEliminar = signal<Incidencia | null>(null);
+  eliminando = signal<boolean>(false);
+  errorAccion = signal<string>('');
+
   esAdmin = computed(() => this.authService.getRol() === 'ADMINISTRADOR');
+
+  constructor() {
+    effect(() => {
+      const lista = this.esAdmin()
+        ? this.realtime.incidencias()
+        : this.realtime.misIncidencias();
+      this.incidencias.set(lista);
+      this.cargando.set(
+        this.esAdmin() ? this.realtime.cargando() : this.realtime.cargandoMias(),
+      );
+    });
+  }
 
   incidenciasFiltradas = computed(() => {
     const texto = this.busqueda().trim().toLowerCase();
@@ -50,26 +74,69 @@ export class IncidenciaLista implements OnInit {
   });
 
   ngOnInit(): void {
+    this.realtime.asegurarConexion();
     this.cargarLista();
   }
 
   cargarLista(): void {
-    this.cargando.set(true);
-    const peticion = this.esAdmin()
-      ? this.incidenciaService.listar()
-      : this.incidenciaService.listarMisIncidencias();
-
-    peticion.subscribe({
-      next: (data) => {
-        this.incidencias.set(data);
-        this.cargando.set(false);
-      },
-      error: () => this.cargando.set(false),
-    });
+    if (this.esAdmin()) {
+      this.realtime.cargarTodas();
+    } else {
+      this.realtime.cargarMisIncidencias();
+    }
   }
 
   verDetalle(incidencia: Incidencia): void {
     this.router.navigate(['/incidencia-detalle', incidencia.idIncidencia]);
+  }
+
+  cambiarVista(vista: 'REPORTES' | 'BITACORA'): void {
+    this.vistaActual.set(vista);
+    if (vista === 'BITACORA') {
+      this.cargarBitacoraPersonal();
+    }
+  }
+
+  cargarBitacoraPersonal(): void {
+    const idUsuario = this.authService.idUsuario();
+    if (!idUsuario) return;
+    this.cargandoBitacora.set(true);
+    this.historialService.buscarPorUsuario(idUsuario).subscribe({
+      next: (eventos) => {
+        this.bitacoraUsuario.set(eventos);
+        this.cargandoBitacora.set(false);
+      },
+      error: () => this.cargandoBitacora.set(false),
+    });
+  }
+
+  solicitarEliminar(incidencia: Incidencia, event: Event): void {
+    event.stopPropagation();
+    this.errorAccion.set('');
+    this.incidenciaAEliminar.set(incidencia);
+  }
+
+  cancelarEliminar(): void {
+    this.incidenciaAEliminar.set(null);
+    this.errorAccion.set('');
+  }
+
+  confirmarEliminar(): void {
+    const inc = this.incidenciaAEliminar();
+    if (!inc || this.eliminando()) return;
+    this.eliminando.set(true);
+    this.errorAccion.set('');
+
+    this.incidenciaService.eliminar(inc.idIncidencia).subscribe({
+      next: () => {
+        this.eliminando.set(false);
+        this.incidenciaAEliminar.set(null);
+      },
+      error: (err) => {
+        this.eliminando.set(false);
+        this.errorAccion.set(err?.error?.message || 'No se pudo eliminar la incidencia.');
+      },
+    });
   }
 
   obtenerProgreso(estado: string): number {

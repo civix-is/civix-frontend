@@ -1,0 +1,177 @@
+.profile-page {
+  background-color: #f3f5f8;
+  min-height: calc(100vh - 72px);
+  padding: 36px 40px;
+  box-sizing: border-box;
+}
+
+.profile-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #1565c0;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.profile-card,
+.kpi-card,
+.empty-state {
+  background: #ffffff;
+  border: 1px solid #e6ebf1;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+}
+
+.main-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #0d5cab;
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.main-card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.role-pill {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.verified-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #047857;
+  margin-bottom: 20px;
+}
+
+.verified-tag mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.info-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid #edf2f7;
+  padding-top: 18px;
+  text-align: left;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.info-row mat-icon {
+  color: #0d5cab;
+}
+
+.lbl {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.info-row strong {
+  font-size: 13px;
+  color: #111827;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0d5cab;
+}
+
+.kpi-value.green {
+  color: #047857;
+}
+
+.kpi-value.amber {
+  color: #d97706;
+}
+
+.kpi-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+@media (max-width: 960px) {
+  .profile-page {
+    padding: 24px 16px;
+  }
+
+  .profile-grid,
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}

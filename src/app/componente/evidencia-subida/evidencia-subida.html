@@ -1,1 +1,82 @@
-<p>evidencia-subida works!</p>
+<div class="gallery-page">
+  <div class="gallery-container">
+    <div class="page-header">
+      <div>
+        <span class="eyebrow">MODERACIÓN MUNICIPAL</span>
+        <h1 class="page-title">Galería de Evidencias</h1>
+      </div>
+      <span class="count-badge">{{ evidenciasFiltradas().length }} archivos</span>
+    </div>
+
+    <div class="filter-bar">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          placeholder="Filtrar por ID de incidencia o fase..."
+          [value]="busqueda()"
+          (input)="busqueda.set($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <div class="empty-state">Cargando evidencias...</div>
+    } @else if (evidenciasFiltradas().length === 0) {
+      <div class="empty-state">No hay fotografías registradas.</div>
+    } @else {
+      <div class="media-grid">
+        @for (ev of evidenciasFiltradas(); track ev.idEvidencia) {
+          <div class="media-card">
+            <div class="media-thumb">
+              <img [src]="ev.urlArchivo" [alt]="ev.fase || 'Evidencia'" />
+              <span class="phase-pill">{{ ev.fase || 'Inicial' }}</span>
+            </div>
+            <div class="media-body">
+              <div class="media-meta">
+                <strong>Evidencia #{{ ev.idEvidencia }}</strong>
+                <span>{{ ev.fechaRegistro | date: 'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="media-actions">
+                <button
+                  type="button"
+                  class="link-btn"
+                  (click)="verIncidencia(ev.idIncidencia)"
+                >
+                  Ver INC-{{ ev.idIncidencia }}
+                </button>
+                <button
+                  type="button"
+                  class="delete-btn"
+                  title="Eliminar fotografía inapropiada"
+                  (click)="evidenciaAEliminar.set(ev)"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+@if (evidenciaAEliminar(); as evDel) {
+  <div class="modal-backdrop" (click)="evidenciaAEliminar.set(null)">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <h3>Eliminar Evidencia</h3>
+      <p>
+        ¿Seguro que deseas eliminar la evidencia <strong>#{{ evDel.idEvidencia }}</strong>?
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="evidenciaAEliminar.set(null)">
+          Cancelar
+        </button>
+        <button type="button" class="btn-danger" (click)="confirmarEliminar()" [disabled]="eliminando()">
+          {{ eliminando() ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

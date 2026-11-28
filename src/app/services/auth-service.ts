@@ -2,14 +2,17 @@ import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { Usuario } from '../model/usuario';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private url = environment.apiUrl;
   private httpClient: HttpClient = inject(HttpClient);
 
+  idUsuario = signal<number | null>(null);
   nombreUsuario = signal<string>('');
   inicialesUsuario = signal<string>('US');
+  usuarioActual = signal<Usuario | null>(null);
 
   login(credenciales: { correo: string; password: string; recordarme?: boolean }): Observable<any> {
     return this.httpClient
@@ -34,8 +37,10 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
+    this.idUsuario.set(null);
     this.nombreUsuario.set('');
     this.inicialesUsuario.set('US');
+    this.usuarioActual.set(null);
   }
 
   getToken(): string | null {
@@ -101,8 +106,10 @@ export class AuthService {
     if (!correo) return;
 
     const params = new HttpParams().set('correo', correo);
-    this.httpClient.get<any>(`${this.url}/usuario/buscar-por-correo`, { params }).subscribe({
+    this.httpClient.get<Usuario>(`${this.url}/usuario/buscar-por-correo`, { params }).subscribe({
       next: (usuario) => {
+        this.usuarioActual.set(usuario);
+        this.idUsuario.set(usuario.idUsuario ?? null);
         const nombreCompleto = `${usuario.nombre || ''} ${usuario.apellido || ''}`.trim();
         this.nombreUsuario.set(nombreCompleto || correo);
 

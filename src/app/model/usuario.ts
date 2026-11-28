@@ -8,6 +8,8 @@ export class Usuario {
   dni: string;
   telefono: string;
   estado: boolean;
-  FechaRegistro: Date= new Date();
+  FechaRegistro: Date = new Date();
+  fechaRegistro?: Date | string;
   idRol: Rol;
+  rol?: Rol;
 }

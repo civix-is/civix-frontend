@@ -6,10 +6,22 @@
       <!-- Encabezado superior con SLA -->
       <div class="detail-header">
         <div class="header-left">
-          <button type="button" class="back-btn" (click)="volver()">
-            <mat-icon>arrow_back</mat-icon>
-            Volver a Seguimiento
-          </button>
+          <div class="header-top-actions">
+            <button type="button" class="back-btn" (click)="volver()">
+              <mat-icon>arrow_back</mat-icon>
+              Volver a Seguimiento
+            </button>
+            @if (esAdmin()) {
+              <button
+                type="button"
+                class="delete-ticket-btn"
+                (click)="confirmandoEliminacion.set(true)"
+              >
+                <mat-icon>delete_outline</mat-icon>
+                Eliminar Incidencia
+              </button>
+            }
+          </div>
           <span class="ticket-eyebrow">TICKET DETALLE</span>
           <h1 class="ticket-main-title">
             {{ inc.codigoIncidencia || 'INC-' + inc.idIncidencia }}: {{ inc.categoria?.nombre || inc.titulo }}
@@ -52,6 +64,16 @@
                     <div class="evidence-card">
                       <img [src]="ev.urlArchivo" [alt]="ev.fase || 'Evidencia'" />
                       <span class="evidence-tag">{{ ev.fase || 'Inicial' }}</span>
+                      @if (esAdmin()) {
+                        <button
+                          type="button"
+                          class="evidence-delete-btn"
+                          title="Eliminar fotografía"
+                          (click)="eliminarEvidencia(ev.idEvidencia)"
+                        >
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      }
                     </div>
                   }
                 </div>
@@ -218,3 +240,33 @@
     }
   </div>
 </div>
+
+@if (confirmandoEliminacion() && incidencia(); as incDel) {
+  <div class="modal-backdrop" (click)="confirmandoEliminacion.set(false)">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <h3>Eliminar Incidencia</h3>
+      <p>
+        ¿Seguro que deseas eliminar permanentemente el ticket
+        <strong>{{ incDel.codigoIncidencia || 'INC-' + incDel.idIncidencia }}</strong>?
+      </p>
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="confirmandoEliminacion.set(false)"
+          [disabled]="eliminando()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-danger"
+          (click)="eliminarIncidencia()"
+          [disabled]="eliminando()"
+        >
+          {{ eliminando() ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

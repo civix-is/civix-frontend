@@ -22,4 +22,11 @@ export class HistorialIncidenciaService {
       params,
     });
   }
+
+  buscarPorUsuario(idUsuario: number): Observable<any[]> {
+    const params = new HttpParams().set('id_usuario', idUsuario);
+    return this.httpClient.get<any[]>(`${this.url}/historial-incidencia/buscar-por-usuario`, {
+      params,
+    });
+  }
 }

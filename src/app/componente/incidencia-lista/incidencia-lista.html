@@ -1,13 +1,73 @@
 <div class="tracking-page">
   <div class="tracking-container">
     <div class="page-header">
-      <span class="eyebrow">
-        {{ esAdmin() ? 'BANDEJA MUNICIPAL DE GESTIÓN' : 'BUZÓN DE INCIDENCIAS' }}
-      </span>
-      <h1 class="page-title">
-        {{ esAdmin() ? 'Gestión y Seguimiento de Reportes' : 'Mis Reportes y Seguimiento' }}
-      </h1>
+      <div>
+        <span class="eyebrow">
+          {{ esAdmin() ? 'BANDEJA MUNICIPAL DE GESTIÓN' : 'BUZÓN DE INCIDENCIAS' }}
+        </span>
+        <h1 class="page-title">
+          {{ esAdmin() ? 'Gestión y Seguimiento de Reportes' : 'Mis Reportes y Seguimiento' }}
+        </h1>
+      </div>
+      <div class="header-actions">
+        @if (!esAdmin()) {
+          <div class="view-tabs">
+            <button
+              type="button"
+              class="pill-btn"
+              [class.active]="vistaActual() === 'REPORTES'"
+              (click)="cambiarVista('REPORTES')"
+            >
+              Mis Reportes
+            </button>
+            <button
+              type="button"
+              class="pill-btn"
+              [class.active]="vistaActual() === 'BITACORA'"
+              (click)="cambiarVista('BITACORA')"
+            >
+              Mi Bitácora
+            </button>
+          </div>
+        }
+        <span class="live-badge" [class.online]="realtime.conectadoTiempoReal()">
+          <span class="dot"></span>
+          {{ realtime.conectadoTiempoReal() ? 'En tiempo real' : 'Reconectando...' }}
+        </span>
+      </div>
     </div>
+
+    @if (vistaActual() === 'BITACORA' && !esAdmin()) {
+      @if (cargandoBitacora()) {
+        <div class="empty-state">Cargando bitácora personal...</div>
+      } @else if (bitacoraUsuario().length === 0) {
+        <div class="empty-state">Aún no hay eventos registrados en tu bitácora.</div>
+      } @else {
+        <div class="tickets-list">
+          @for (ev of bitacoraUsuario(); track ev.idHistorial) {
+            <div class="ticket-card" (click)="router.navigate(['/incidencia-detalle', ev.idIncidencia])">
+              <div class="ticket-col-left">
+                <span class="ticket-id">INC-{{ ev.idIncidencia }}</span>
+                <span class="ticket-category">{{ ev.areaAsignada || 'Seguimiento' }}</span>
+              </div>
+              <div class="ticket-col-center">
+                <h3 class="ticket-title">{{ ev.estadoAnterior }} → {{ ev.estadoNuevo }}</h3>
+                <span class="ticket-date">
+                  {{ ev.fechaCambio | date: 'dd/MM/yyyy, hh:mm a' }}
+                  @if (ev.usuarioAccion) { · Por {{ ev.usuarioAccion }} }
+                </span>
+                <p class="event-comment">{{ ev.comentario }}</p>
+              </div>
+              <div class="ticket-col-right">
+                <span class="status-badge" [ngClass]="'badge-' + (ev.estadoNuevo || 'pendiente').toLowerCase()">
+                  {{ obtenerEtiquetaEstado(ev.estadoNuevo) }}
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    } @else {
 
     <!-- Barra de búsqueda y pastillas de filtro -->
     <div class="filter-bar">
@@ -116,10 +176,51 @@
               <button type="button" class="expand-btn" title="Ver detalles del ticket">
                 <mat-icon>{{ esAdmin() ? 'edit_note' : 'arrow_forward' }}</mat-icon>
               </button>
+
+              @if (esAdmin()) {
+                <button
+                  type="button"
+                  class="delete-btn"
+                  title="Eliminar incidencia"
+                  (click)="solicitarEliminar(inc, $event)"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              }
             </div>
           </div>
         }
       </div>
     }
+    }
   </div>
 </div>
+
+@if (incidenciaAEliminar(); as incDel) {
+  <div class="modal-backdrop" (click)="cancelarEliminar()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <h3>Eliminar Incidencia</h3>
+      <p>
+        ¿Seguro que deseas eliminar el reporte
+        <strong>{{ incDel.codigoIncidencia || 'INC-' + incDel.idIncidencia }}</strong>
+        ({{ incDel.titulo }})? Esta acción no se puede deshacer.
+      </p>
+      @if (errorAccion()) {
+        <p class="modal-error">{{ errorAccion() }}</p>
+      }
+      <div class="modal-actions">
+        <button type="button" class="pill-btn" (click)="cancelarEliminar()" [disabled]="eliminando()">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-danger"
+          (click)="confirmarEliminar()"
+          [disabled]="eliminando()"
+        >
+          {{ eliminando() ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

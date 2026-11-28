@@ -1,1 +1,94 @@
-<p>calificacion-form works!</p>
+<div class="ratings-page">
+  <div class="ratings-container">
+    <div class="page-header">
+      <div>
+        <span class="eyebrow">SATISFACCIÓN CIUDADANA</span>
+        <h1 class="page-title">Calificaciones de Atención</h1>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-value">{{ promedio() }} ★</span>
+        <span class="kpi-label">Promedio General</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-value">{{ calificaciones().length }}</span>
+        <span class="kpi-label">Total de Evaluaciones</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-value green">{{ cincoEstrellas() }}</span>
+        <span class="kpi-label">Calificaciones 5 Estrellas</span>
+      </div>
+    </div>
+
+    <div class="filter-pills">
+      @for (estrella of [0, 5, 4, 3, 2, 1]; track estrella) {
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="filtroEstrellas() === estrella"
+          (click)="filtroEstrellas.set(estrella)"
+        >
+          {{ estrella === 0 ? 'Todas' : estrella + ' ★' }}
+        </button>
+      }
+    </div>
+
+    @if (cargando()) {
+      <div class="empty-state">Cargando calificaciones...</div>
+    } @else if (calificacionesFiltradas().length === 0) {
+      <div class="empty-state">No hay calificaciones registradas con este filtro.</div>
+    } @else {
+      <div class="cards-list">
+        @for (cal of calificacionesFiltradas(); track cal.idCalificacion) {
+          <div class="rating-card" (click)="verDetalle(cal)">
+            <div class="col-left">
+              <span class="rating-id">CAL-{{ cal.idCalificacion }}</span>
+              <span class="rating-stars">{{ '★'.repeat(cal.puntuacion) }}{{ '☆'.repeat(5 - cal.puntuacion) }}</span>
+            </div>
+            <div class="col-center">
+              <p class="rating-comment">{{ cal.comentario || 'Sin comentario adicional.' }}</p>
+              <span class="rating-date">
+                Incidencia #{{ cal.idIncidencia }}
+                @if (cal.fechaCalificacion) {
+                  · {{ cal.fechaCalificacion | date: 'dd/MM/yyyy, hh:mm a' }}
+                }
+              </span>
+            </div>
+            <div class="col-right">
+              <button type="button" class="icon-btn" title="Ver detalle">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+@if (detalleCalificacion(); as det) {
+  <div class="modal-backdrop" (click)="detalleCalificacion.set(null)">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <h3>Detalle de Calificación #{{ det.idCalificacion }}</h3>
+      @if (cargandoDetalle()) {
+        <p>Cargando detalle...</p>
+      }
+      <div class="detail-rows">
+        <div><strong>Puntuación:</strong> {{ det.puntuacion }} / 5 ★</div>
+        <div><strong>Incidencia:</strong> INC-{{ det.idIncidencia }}</div>
+        <div><strong>Fecha:</strong> {{ det.fechaCalificacion | date: 'dd/MM/yyyy, hh:mm a' }}</div>
+        <div><strong>Comentario:</strong> {{ det.comentario || 'Sin comentario.' }}</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="detalleCalificacion.set(null)">
+          Cerrar
+        </button>
+        <button type="button" class="btn-primary" (click)="irAIncidencia(det.idIncidencia)">
+          Ver Incidencia
+        </button>
+      </div>
+    </div>
+  </div>
+}

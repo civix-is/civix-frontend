@@ -1,31 +1,138 @@
+<div class="users-page">
+  <div class="users-container">
+    <div class="page-header">
+      <div>
+        <span class="eyebrow">ADMINISTRACIÓN MUNICIPAL</span>
+        <h1 class="page-title">Directorio de Usuarios</h1>
+      </div>
+      <span class="count-badge">
+        <mat-icon>group</mat-icon>
+        {{ usuariosFiltrados().length }} usuarios
+      </span>
+    </div>
 
-<div class="mat-elevation-z8">
-  <table mat-table [dataSource]="dataSource" matSort>
-    <!-- Position Column -->
-    <ng-container matColumnDef="idUsuario">
-      <th mat-header-cell *matHeaderCellDef> ID </th>
-      <td mat-cell *matCellDef="let element"> {{element.idUsuario}} </td>
-    </ng-container>
-    <!-- Name Column -->
-    <ng-container matColumnDef="nombre">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header> Nombre </th>
-      <td mat-cell *matCellDef="let element"> {{element.nombre}} </td>
-    </ng-container>
-    <!-- Fecha Column -->
-    <ng-container matColumnDef="correo">
-      <th mat-header-cell *matHeaderCellDef> Correo </th>
-      <td mat-cell *matCellDef="let element"> {{element.correo}} </td>
-    </ng-container>
-    <!-- Symbol Column -->
-    <ng-container matColumnDef="email">
-      <th mat-header-cell *matHeaderCellDef> Email </th>
-      <td mat-cell *matCellDef="let element"> {{element.email}} </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
-  <mat-paginator [pageSizeOptions]="[5, 10, 20]"
-                 showFirstLastButtons=""
-                 aria-label="Select page of periodic elements">
-  </mat-paginator>
+    <div class="filter-bar">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          placeholder="Buscar por nombre, correo o DNI..."
+          [value]="busqueda()"
+          (input)="busqueda.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="filter-pills">
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="filtroRol() === 'TODOS'"
+          (click)="filtroRol.set('TODOS')"
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="filtroRol() === 'ADMINISTRADOR'"
+          (click)="filtroRol.set('ADMINISTRADOR')"
+        >
+          Administradores
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="filtroRol() === 'CIUDADANO'"
+          (click)="filtroRol.set('CIUDADANO')"
+        >
+          Ciudadanos
+        </button>
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <div class="empty-state">Cargando usuarios...</div>
+    } @else if (usuariosFiltrados().length === 0) {
+      <div class="empty-state">No se encontraron usuarios con los filtros seleccionados.</div>
+    } @else {
+      <div class="users-list">
+        @for (u of usuariosFiltrados(); track u.idUsuario) {
+          <div class="user-card">
+            <div class="user-col-left">
+              <div class="user-avatar" [class.admin-avatar]="obtenerRol(u) === 'ADMINISTRADOR'">
+                {{ obtenerIniciales(u) }}
+              </div>
+              <div class="user-id-block">
+                <span class="user-id">USR-{{ u.idUsuario }}</span>
+                <span class="user-dni">DNI: {{ u.dni || '—' }}</span>
+              </div>
+            </div>
+
+            <div class="user-col-center">
+              <h3 class="user-name">{{ u.nombre }} {{ u.apellido }}</h3>
+              <div class="user-meta">
+                <span><mat-icon>mail_outline</mat-icon> {{ u.correo }}</span>
+                @if (u.telefono) {
+                  <span><mat-icon>call</mat-icon> {{ u.telefono }}</span>
+                }
+                @if (obtenerFechaRegistro(u)) {
+                  <span>
+                    <mat-icon>calendar_today</mat-icon>
+                    Registro: {{ obtenerFechaRegistro(u) | date: 'dd/MM/yyyy' }}
+                  </span>
+                }
+              </div>
+            </div>
+
+            <div class="user-col-right">
+              <span
+                class="role-badge"
+                [class.role-admin]="obtenerRol(u) === 'ADMINISTRADOR'"
+              >
+                {{ obtenerRol(u) === 'ADMINISTRADOR' ? 'Administrador' : 'Ciudadano' }}
+              </span>
+
+              <span class="status-badge" [class.inactive]="u.estado === false">
+                {{ u.estado === false ? 'Inactivo' : 'Activo' }}
+              </span>
+
+              @if (u.estado !== false && u.idUsuario !== authService.idUsuario()) {
+                <button
+                  type="button"
+                  class="btn-baja"
+                  title="Dar de baja"
+                  (click)="solicitarBaja(u)"
+                >
+                  <mat-icon>person_off</mat-icon>
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
 </div>
+
+@if (usuarioBaja(); as uDel) {
+  <div class="modal-backdrop" (click)="usuarioBaja.set(null)">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <h3>Dar de Baja a Usuario</h3>
+      <p>
+        ¿Seguro que deseas inhabilitar la cuenta de
+        <strong>{{ uDel.nombre }} {{ uDel.apellido }}</strong> ({{ uDel.correo }})?
+      </p>
+      @if (errorBaja()) {
+        <p class="modal-error">{{ errorBaja() }}</p>
+      }
+      <div class="modal-actions">
+        <button type="button" class="pill-btn" (click)="usuarioBaja.set(null)" [disabled]="procesandoBaja()">
+          Cancelar
+        </button>
+        <button type="button" class="btn-danger" (click)="confirmarBaja()" [disabled]="procesandoBaja()">
+          {{ procesandoBaja() ? 'Procesando...' : 'Dar de baja' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

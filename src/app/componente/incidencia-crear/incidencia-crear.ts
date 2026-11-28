@@ -355,15 +355,13 @@ export class IncidenciaCrear implements OnInit, AfterViewInit, OnDestroy {
 
         const fotosAdjuntas = this.fotos();
         if (fotosAdjuntas.length > 0 && respuestaBackend.idIncidencia) {
-          const peticionesEvidencia = fotosAdjuntas.map((f) => {
-            const nombreLimpio = f.file.name.replace(/\s+/g, '_');
-            return this.evidenciaService.registrar({
-              idIncidencia: respuestaBackend.idIncidencia,
-              urlArchivo: `https://civix-storage.local/evidencias/${respuestaBackend.idIncidencia}_${nombreLimpio}`,
-              tipoArchivo: 'IMAGE',
-              fase: 'Inicial',
-            });
-          });
+          const peticionesEvidencia = fotosAdjuntas.map((f) =>
+            this.evidenciaService.subirArchivo(
+              f.file,
+              respuestaBackend.idIncidencia,
+              'Inicial',
+            ),
+          );
 
           forkJoin(peticionesEvidencia).subscribe({
             next: () => {

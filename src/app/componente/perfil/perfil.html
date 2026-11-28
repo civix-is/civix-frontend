@@ -1,0 +1,76 @@
+<div class="profile-page">
+  <div class="profile-container">
+    <div class="page-header">
+      <div>
+        <span class="eyebrow">CUENTA PERSONAL</span>
+        <h1 class="page-title">Mi Perfil de Usuario</h1>
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <div class="empty-state">Cargando perfil...</div>
+    } @else if (error()) {
+      <div class="empty-state">{{ error() }}</div>
+    } @else if (perfil(); as u) {
+      <div class="profile-grid">
+        <div class="profile-card main-card">
+          <div class="avatar-large">{{ authService.inicialesUsuario() }}</div>
+          <h2>{{ u.nombre }} {{ u.apellido }}</h2>
+          <span class="role-pill">{{ obtenerRol(u) }}</span>
+          <span class="verified-tag">
+            <mat-icon>verified_user</mat-icon>
+            {{ u.estado === false ? 'Cuenta inactiva' : 'Cuenta activa' }}
+          </span>
+
+          <div class="info-list">
+            <div class="info-row">
+              <mat-icon>badge</mat-icon>
+              <div>
+                <span class="lbl">DNI</span>
+                <strong>{{ u.dni || '—' }}</strong>
+              </div>
+            </div>
+            <div class="info-row">
+              <mat-icon>mail_outline</mat-icon>
+              <div>
+                <span class="lbl">Correo electrónico</span>
+                <strong>{{ u.correo }}</strong>
+              </div>
+            </div>
+            <div class="info-row">
+              <mat-icon>call</mat-icon>
+              <div>
+                <span class="lbl">Teléfono</span>
+                <strong>{{ u.telefono || 'No registrado' }}</strong>
+              </div>
+            </div>
+            <div class="info-row">
+              <mat-icon>calendar_today</mat-icon>
+              <div>
+                <span class="lbl">Miembro desde</span>
+                <strong>{{ (u.fechaRegistro || u.FechaRegistro) | date: 'dd/MM/yyyy' }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics-column">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-value">{{ totalMisReportes() }}</span>
+              <span class="kpi-label">Reportes Enviados</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-value green">{{ resueltos() }}</span>
+              <span class="kpi-label">Resueltos</span>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-value amber">{{ pendientes() }}</span>
+              <span class="kpi-label">Pendientes / En Proceso</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
