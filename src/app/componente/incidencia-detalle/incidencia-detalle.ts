@@ -28,6 +28,7 @@ import { HistorialIncidenciaService } from '../../services/historial-incidencia-
 import { EvidenciaService } from '../../services/evidencia-service';
 import { AuthService } from '../../services/auth-service';
 import { Incidencia } from '../../model/incidencia';
+import { CalificacionForm } from '../calificacion-form/calificacion-form';
 
 @Component({
   selector: 'app-incidencia-detalle',
@@ -41,6 +42,7 @@ import { Incidencia } from '../../model/incidencia';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    CalificacionForm,
   ],
   styleUrl: './incidencia-detalle.css',
   templateUrl: './incidencia-detalle.html',

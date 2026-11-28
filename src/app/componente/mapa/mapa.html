@@ -192,14 +192,17 @@
                 Apoyo Vecinal
               </button>
 
-              <button
-                type="button"
-                class="btn-rate-report"
-                (click)="mostrarCalificacion.set(!mostrarCalificacion())"
-              >
-                <mat-icon>star</mat-icon>
-                Calificar Reporte
-              </button>
+              @if (puedeCalificar(sel)) {
+                <button
+                  type="button"
+                  class="btn-rate-report"
+                  [attr.aria-expanded]="mostrarCalificacion()"
+                  (click)="mostrarCalificacion.set(!mostrarCalificacion())"
+                >
+                  <mat-icon>star</mat-icon>
+                  Calificar Reporte
+                </button>
+              }
             </div>
           </div>
         </div>

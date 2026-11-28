@@ -23,11 +23,13 @@ import { EvidenciaService } from '../../services/evidencia-service';
 import { CalificacionService } from '../../services/calificacion-service';
 import { Incidencia } from '../../model/incidencia';
 import { Categoria } from '../../model/categoria';
+import { AuthService } from '../../services/auth-service';
+import { CalificacionForm } from '../calificacion-form/calificacion-form';
 
 @Component({
   selector: 'app-mapa',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, MatIconModule, MatButtonModule],
+  imports: [CommonModule, DatePipe, FormsModule, MatIconModule, MatButtonModule, CalificacionForm],
   templateUrl: './mapa.html',
   styleUrl: './mapa.css',
 })
@@ -45,6 +47,7 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private readonly STORAGE_APOYOS = 'civix_apoyos_vecinales';
   private readonly STORAGE_CALIFICACIONES = 'civix_calificaciones_mapa';
+  private readonly authService = inject(AuthService);
 
   categorias = signal<Categoria[]>([]);
   categoriasSeleccionadas = signal<Set<number>>(new Set());
@@ -107,7 +110,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       error: () => this.realtime.cargarTodas(),
     });
   }
-
+  puedeCalificar(incidencia: Incidencia): boolean {
+    return incidencia.estadoAtencion === 'ATENDIDO' && this.authService.getRol() === 'CIUDADANO';
+  }
   private cargarPersistenciaLocal(): void {
     const apoyosRaw = localStorage.getItem(this.STORAGE_APOYOS);
     if (apoyosRaw) {
